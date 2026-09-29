@@ -1,0 +1,9 @@
+# build_db.py 生成的 SQLite，不进 git
+build/
+.venv/
+
+# Python / 工具缓存
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/

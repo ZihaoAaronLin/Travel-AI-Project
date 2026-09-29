@@ -1,0 +1,40 @@
+[project]
+name = "travel-kb"
+version = "0.1.0"
+description = "个人旅行规划用的 MCP Server：代码核验景点开放时间、同名消歧等硬事实"
+requires-python = ">=3.12"
+dependencies = [
+    "mcp[cli]>=2.2,<3",
+    "pydantic>=2",
+    "pyyaml",
+    "python-dateutil",
+]
+
+[project.scripts]
+travelkb-server = "travelkb.server:main"
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "anyio",
+    "ruff",
+]
+
+[build-system]
+requires = ["uv_build>=0.8.17,<0.9.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+# 发行名是 travel-kb，但 import 名是 travelkb（默认会推成 travel_kb）
+module-name = "travelkb"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+# T20 = flake8-print：把「禁止 print」变成 lint 错误，而不是靠自觉
+select = ["E", "F", "I", "UP", "B", "T20"]
