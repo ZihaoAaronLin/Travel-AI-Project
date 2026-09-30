@@ -12,8 +12,15 @@
   - 第 4 阶段加官网抽取管线 scripts/extract_poi.py
 - 第 1 阶段城市定为布达佩斯，景点和官网见 ROADMAP 第 1 阶段；渔人堡、沃伊达奇城堡各拆两条（共 8 条 poi）；Aaron 确认 vajdahunyadcastle.com 是官方站
 
+### 官网抓取结果（2026-09-30）
+- 圣史蒂芬大教堂 bazilikabudapest.hu/nyitvatartas：已抓到。匈牙利语页比英文页完整（英文页漏了关门时间）；页面没写有效期
+- 沃伊达奇城堡 vajdahunyadcastle.com：**证据显示不是官方站**（和 hungarianparliament.com、szechenyibath.com、budapestcards.com 同一批站点，用第三人称介绍博物馆）。官方应为匈牙利农业博物馆 mezogazdasagimuzeum.hu，被云端网络策略拦截（403）
+- 渔人堡 ticket.budavar.hu：纯前端页面，开放时间要浏览器执行 JS 才出现；curl 拿不到，容器内浏览器因 TLS 证书信任问题没跑起来
+- 两家美术馆 en.mng.hu、www.mfab.hu：网站本身返回 HTTP 451，拒绝云端访问
+- 国会大厦：parliamentvisit.com 会跳到不带 www 的域名，被网络策略拦截（403）
+
 ### 没做完
-- 景点开放时间数据：云端环境抓不到官网（mfab.hu 返回 HTTP 451，其余域名之前被网络策略拦截）。等 Aaron 从浏览器复制或截图官网开放时间
+- 除大教堂外，其余景点开放时间要 Aaron 在本机浏览器复制或截图
 - 第 7 节规则语义第 0–5 步，Aaron 还没审定；拆分后「全天可进的露台 / 庭院」在 is_open 里怎么表达还没定
 - 10 条金标准还没写
 
