@@ -119,7 +119,7 @@ CLAUDE.md 模板（第 0 阶段原样交给 CC）：
 | 阶段 | 做完能演示什么 | 做完可以如实写进简历的 | 时间 |
 |---|---|---|---|
 | 0 准备 | Claude Desktop 里能调 ping | — | 0.5 天 |
-| 1 最薄通路 | 6 个景点；同名会追问；闭馆日答 CLOSED 并给来源；数据范围外答 UNKNOWN | 自建 Python MCP Server + SQLite 规则库，已接入 Claude Desktop 跑通工具调用 | 2–3 天 |
+| 1 最薄通路 | 6 个景点；同名会追问；闭馆日答 CLOSED 并给来源；数据范围外答 UNKNOWN | 自建 Python MCP Server + YAML 规则库（代码判定），已接入 Claude Desktop 跑通工具调用 | 2–3 天 |
 | 2 规则引擎 | 一座城约 20 个景点、7 类规则；整日行程校验和替换；只读 SQL；第一次基线评测 | 参数化工具与只读执行的模型生成 SQL；第一个真实数字 | 3–4 天 |
 | 3 经验库 | Notion 攻略迁成 Markdown，按景点 / 城市检索 | Markdown 经验库 | 2 天 |
 | 4 交通与多城市 | 官网抽取管线；四座城 60–80 个景点、跨城同名、末班车 | 模型抽取 + 人工抽检的数据管线（附抽取准确率）；多城市、交通规则 | 4–5 天 |
@@ -167,7 +167,9 @@ CLAUDE.md 模板（第 0 阶段原样交给 CC）：
 - 同名：多个候选就返回 AMBIGUOUS 加全部候选，不许自动挑第一个；带 city 能唯一确定才 MATCH
 
 **交给 CC 的要点**
-- YAML（第 7 节格式）→ build_db.py 编成 SQLite；运行时只读打开
+- server 启动时直接 load_pois 读 YAML（2026-10-08 定：SQLite 推迟到第 2 阶段 query_kb 真正需要 SQL 时再上；core 不依赖存储方式，换存储只改加载层）
+- validate_data.py：有效期是否落在核验日起 90 天内、例外是否落在有效期内、逐日枚举查规则冲突、有规则却没来源、未核对（draft）、同名撞车清单
+- is_open 不给日期时，server 按景点时区算当地「今天」（铁律 3）；时钟可注入，测试里固定
 - resolve：别名精确匹配，统一大小写、去变音符号（Szépművészeti 对上 szepmuveszeti）；不做「模糊匹配后自动选中」
 - is_open：实现第 7 节规则语义的第 0–4 步（第 2 步只做单日例外：真实数据在有效期内就有例外日，不做会错答 OPEN）；返回里带代码算出的星期几（模型常把星期几算错）
 - 返回值用 Pydantic 模型（SDK 据此自动生成 outputSchema 和 structuredContent）；参数错误抛 ToolError（`from mcp.server.mcpserver.exceptions import ToolError`），模型能看到并自己改
@@ -207,6 +209,7 @@ CLAUDE.md 模板（第 0 阶段原样交给 CC）：
 - 再写 15 条金标准，集中在边界：换季前后一天、每月最后一个周一及前后一周、例外日
 
 **交给 CC 的要点**
+- scripts/build_db.py：YAML → build/travelkb.sqlite，运行时只读打开（从第 1 阶段推迟到这里，query_kb 要用）
 - 引擎按第 7 节全部实现；同一天两条规则结论相反 → UNKNOWN，校验脚本同时报错
 - validate_data.py：每条规则有 source_url 和 verified_at；逐日枚举有效期查冲突；列出别名撞车（每组撞车都要有对应金标准）；RRULE 能解析；时区合法；时间字段是字符串
 - check_day_plan：闭馆、到早了、晚于最后入场、预约没提前到、站点时间重叠。**不算路上时间**，工具描述里写明

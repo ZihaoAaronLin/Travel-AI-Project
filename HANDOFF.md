@@ -11,20 +11,22 @@
 - 金标准骨架：tests/golden/cases.yaml（10 题，只填了问题、调用、去哪查；expect 留空）+ test_cases.py（runner）
   - expect 为 null 的题自动跳过；CC 私下确认过 10 条调用都能执行、写错 expect 会失败，但没有看引擎答案，避免影响 Aaron 独立核对
 
+### 下一批测试（红，等 Aaron 审）
+- Aaron 定：SQLite 推迟到第 2 阶段，第 1 阶段 server 直接读 YAML（ROADMAP 已改）
+- tests/unit/test_tools.py（12）：MCP 层接线——工具注册且只读、工具描述里写明先 resolve 再 is_open / AMBIGUOUS 要问 / UNKNOWN 的含义、结果里日期 "YYYY-MM-DD" 时刻 "HH:MM"、坏日期坏时刻和未知 poi_id 以 is_error 告诉模型、不给日期时按景点时区算「今天」（注入固定时钟，同一时刻布达佩斯已是周一、纽约还是周日）
+- tests/unit/test_validate.py（10）：validate_data 的核心逻辑 core/validate.py——error / warning / info 三级
+- tests/golden/test_data_validation.py（1）：真实数据零 error、零 warning
+- 测试定下的接口：travelkb.server.build_server(pois, clock)；travelkb.core.validate.validate_pois(pois) → Issue(level, code, poi_id, message)
+- 现在这 3 个文件因为 build_server / core.validate 不存在而收集失败——预期的红；其余 81 条照常通过
+
 ### 没做完
 - 10 条金标准的 expect 等 Aaron 回官网填写
-- MCP 工具还没注册：server.py 里只有 ping
-- build_db.py / validate_data.py 还没写
+- 上面这批测试等 Aaron 审，审过再实现 build_server、core/validate.py、scripts/validate_data.py
 
 ### 下一步
-1. Aaron：按 cases.yaml 顶部说明填 10 条 expect，跑 `uv run pytest tests/golden -rs`
-2. Aaron 定：第 1 阶段要不要上 SQLite（见下）
-3. CC：写下一批测试（红）给 Aaron 审：server 的 resolve_poi / is_open 工具（内存 Client）、validate_data；审过再实现
-4. 之后：Claude Desktop 里问「下周一去布达佩斯美术馆」，验收同名追问
-
-### 待定：第 1 阶段要不要 SQLite
-- ROADMAP 原计划第 1 阶段就 YAML → build_db.py → SQLite，运行时只读打开
-- CC 建议：第 1 阶段 server 启动时直接 load_pois 读 YAML（12 条，毫秒级），SQLite 推迟到第 2 阶段 query_kb 真正需要 SQL 时再上。理由是总原则 4「先用最笨的办法」；core 不依赖存储方式，以后换 SQLite 只改加载那一层
+1. Aaron：填 10 条金标准；审 test_tools.py、test_validate.py
+2. CC：实现到全绿（不改测试）
+3. Aaron：Claude Desktop 里问「下周一去布达佩斯美术馆」，验收同名追问；在 Project 指令里写最简 SOP（先 resolve 再 is_open；UNKNOWN 就说不确定）
 
 ## 2026-10-08（上午）· 第 1 阶段数据草稿
 
