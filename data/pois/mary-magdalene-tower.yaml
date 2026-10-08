@@ -1,6 +1,6 @@
 # 来源原文：data/sources/2026-10-08-official-pages.md（Mary Magdalene Tower 2026）
 # 注意：这不是渔人堡的一部分。Magdolna-torony 是城堡区北端 Kapisztrán tér 的一座独立古塔，
-#   只是和渔人堡共用 ticket.budavar.hu 这个售票站。是否保留这条，由 Aaron 决定
+#   只是和渔人堡共用 ticket.budavar.hu 这个售票站。Aaron 2026-10-08 决定保留
 # 有效期 = 核验日起 90 天（2026-10-08 ~ 2027-01-06）∩ 官网 2026 年时间表（到 12/31）
 # 未覆盖：2027 年时间表官网未公布 → 2027-01-01 起查出 UNKNOWN
 # 中文名是 CC 的译名，待 Aaron 定
@@ -10,7 +10,7 @@ country: HU
 tz: Europe/Budapest
 category: tower
 status: OPEN
-review: draft
+review: verified
 names: {local: Magdolna-torony, en: Mary Magdalene Tower, zh: 抹大拉的马利亚塔}
 aliases: [玛利亚抹大拉塔, Magdalene Tower]
 rules:

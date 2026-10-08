@@ -1,33 +1,33 @@
 # 来源原文：data/sources/2026-10-08-official-pages.md（2026-09-30 CC 抓取，匈牙利语页）
 # 以匈牙利语页为准：英文页只写售票时间，漏了关门时间
-# verified_at 是 CC 的抓取日期，Aaron 还没核对过。核对后把 verified_at 改成核对日，并按 90 天重算 valid
+# CC 2026-09-30 抓取，Aaron 2026-10-08 核对
 # last_entry 取的是售票截止（Jegykiadás）。官网没说预购票能不能晚于售票截止入场
 # 未覆盖：弥撒期间游客能否参观，官网这页没写
-# 有效期 = 抓取日起 90 天（2026-09-30 ~ 2026-12-29）
+# 有效期 = 核验日起 90 天（2026-10-08 ~ 2027-01-06）
 id: st-stephens-basilica-church
 city: Budapest
 country: HU
 tz: Europe/Budapest
 category: church
 status: OPEN
-review: draft
+review: verified
 names: {local: Szent István-bazilika, en: "St. Stephen's Basilica", zh: 圣史蒂芬大教堂}
 aliases: [圣伊什特万大教堂, 圣斯蒂芬大教堂, "St Stephen's Basilica", Basilica]
 rules:
   # 原文：Hétfő – Szombat: 9:00 – 17:45；Jegykiadás: 9:00 – 17:15
   - id: r1
-    valid: [2026-09-30, 2026-12-29]
+    valid: [2026-10-08, 2027-01-06]
     days: [MON, TUE, WED, THU, FRI, SAT]
     open: "09:00"
     close: "17:45"
     last_entry: "17:15"
   # 原文：Vasárnap: 13:00 – 17:45；Jegykiadás: 12:30 – 17:15
   - id: r2
-    valid: [2026-09-30, 2026-12-29]
+    valid: [2026-10-08, 2027-01-06]
     days: [SUN]
     open: "13:00"
     close: "17:45"
     last_entry: "17:15"
 exceptions: []
 source_url: https://bazilikabudapest.hu/nyitvatartas/
-verified_at: 2026-09-30
+verified_at: 2026-10-08

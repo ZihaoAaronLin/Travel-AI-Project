@@ -1,5 +1,5 @@
 # 来源原文：data/sources/2026-10-08-official-pages.md（Fisherman's Bastion Terrace 2026）
-# 待核 1：标题写 2026，但 Opening period 一行写「January 2 – December 23, 2025」，疑似官网笔误
+# 注意 1：标题写 2026，但 Opening period 一行写「January 2 – December 23, 2025」，按官网笔误处理、取 2026（Aaron 2026-10-08 核对）
 # 注意 2：官网给的是 Payment periods（收费时段），不是开放时段；收费时段外能不能进，官网没写
 #   → outside_hours: UNKNOWN：收费时段内答 OPEN，时段外答 UNKNOWN（不答 CLOSED）
 # 未覆盖：Free days 12/24–12/31 只说免费、没给时段 → 不写规则，查出 UNKNOWN；
@@ -11,7 +11,7 @@ country: HU
 tz: Europe/Budapest
 category: viewpoint
 status: OPEN
-review: draft
+review: verified
 names: {local: Halászbástya, en: "Fisherman's Bastion Terrace", zh: 渔人堡收费观景台}
 aliases: [渔人堡, "Fisherman's Bastion", 渔夫堡]
 rules:

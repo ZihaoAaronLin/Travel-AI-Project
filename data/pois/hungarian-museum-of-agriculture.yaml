@@ -10,7 +10,7 @@ country: HU
 tz: Europe/Budapest
 category: museum
 status: OPEN
-review: draft
+review: verified
 names: {local: Magyar Mezőgazdasági Múzeum, en: Hungarian Museum of Agriculture, zh: 匈牙利农业博物馆}
 aliases: [农业博物馆, 沃伊达奇城堡, Vajdahunyad Castle, Vajdahunyad]
 rules:

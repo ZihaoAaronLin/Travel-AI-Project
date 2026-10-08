@@ -8,7 +8,7 @@ country: HU
 tz: Europe/Budapest
 category: museum
 status: OPEN
-review: draft
+review: verified
 names: {local: Szépművészeti Múzeum, en: "Museum of Fine Arts, Budapest", zh: 布达佩斯美术馆}
 aliases: [美术馆, 布达佩斯美术博物馆, Museum of Fine Arts, MFAB]
 rules:

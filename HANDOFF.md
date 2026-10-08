@@ -1,6 +1,32 @@
 # HANDOFF
 
-## 2026-10-08 · 第 1 阶段数据草稿
+## 2026-10-08（下午）· core 实现 + 金标准骨架
+
+### 做了什么
+- 数据：Aaron 核对完 12 个 YAML，全部改成 review: verified
+  - 大教堂两条：verified_at 从 CC 抓取日 9/30 改成 Aaron 核对日 10/08，valid 重算为 2026-10-08 ~ 2027-01-06
+  - 渔人堡 2025 按官网笔误处理（取 2026）；抹大拉的马利亚塔保留
+- 实现 src/travelkb/core/：models.py、loader.py、resolve.py、hours.py
+  - 单元测试 63 个函数（展开后 80 条）+ 数据加载 1 条，一次全绿；tests/ 在审过之后没有改动
+- 金标准骨架：tests/golden/cases.yaml（10 题，只填了问题、调用、去哪查；expect 留空）+ test_cases.py（runner）
+  - expect 为 null 的题自动跳过；CC 私下确认过 10 条调用都能执行、写错 expect 会失败，但没有看引擎答案，避免影响 Aaron 独立核对
+
+### 没做完
+- 10 条金标准的 expect 等 Aaron 回官网填写
+- MCP 工具还没注册：server.py 里只有 ping
+- build_db.py / validate_data.py 还没写
+
+### 下一步
+1. Aaron：按 cases.yaml 顶部说明填 10 条 expect，跑 `uv run pytest tests/golden -rs`
+2. Aaron 定：第 1 阶段要不要上 SQLite（见下）
+3. CC：写下一批测试（红）给 Aaron 审：server 的 resolve_poi / is_open 工具（内存 Client）、validate_data；审过再实现
+4. 之后：Claude Desktop 里问「下周一去布达佩斯美术馆」，验收同名追问
+
+### 待定：第 1 阶段要不要 SQLite
+- ROADMAP 原计划第 1 阶段就 YAML → build_db.py → SQLite，运行时只读打开
+- CC 建议：第 1 阶段 server 启动时直接 load_pois 读 YAML（12 条，毫秒级），SQLite 推迟到第 2 阶段 query_kb 真正需要 SQL 时再上。理由是总原则 4「先用最笨的办法」；core 不依赖存储方式，以后换 SQLite 只改加载那一层
+
+## 2026-10-08（上午）· 第 1 阶段数据草稿
 
 ### 做了什么
 - Aaron 定：拆分（渔人堡、沃伊达奇城堡、大教堂都拆）；草稿标记用 review 字段；有效期按核验后 90 天

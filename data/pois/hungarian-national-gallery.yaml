@@ -9,7 +9,7 @@ country: HU
 tz: Europe/Budapest
 category: museum
 status: OPEN
-review: draft
+review: verified
 names: {local: Magyar Nemzeti Galéria, en: Hungarian National Gallery, zh: 匈牙利国家美术馆}
 aliases: [国家美术馆, 美术馆, MNG, National Gallery]
 rules:
