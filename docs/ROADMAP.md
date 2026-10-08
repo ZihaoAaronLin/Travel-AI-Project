@@ -169,7 +169,7 @@ CLAUDE.md 模板（第 0 阶段原样交给 CC）：
 **交给 CC 的要点**
 - YAML（第 7 节格式）→ build_db.py 编成 SQLite；运行时只读打开
 - resolve：别名精确匹配，统一大小写、去变音符号（Szépművészeti 对上 szepmuveszeti）；不做「模糊匹配后自动选中」
-- is_open：实现第 7 节规则语义的 0、1、3、4、5 步；返回里带代码算出的星期几（模型常把星期几算错）
+- is_open：实现第 7 节规则语义的第 0–4 步（第 2 步只做单日例外：真实数据在有效期内就有例外日，不做会错答 OPEN）；返回里带代码算出的星期几（模型常把星期几算错）
 - 返回值用 Pydantic 模型（SDK 据此自动生成 outputSchema 和 structuredContent）；参数错误抛 ToolError（`from mcp.server.mcpserver.exceptions import ToolError`），模型能看到并自己改
 - 工具标 `ToolAnnotations(read_only_hint=True)`（`from mcp.types import ToolAnnotations`）
 - 工具描述写清：什么时候调、日期格式、UNKNOWN 什么意思、下一步做什么。**工具描述就是给模型的提示词**
@@ -407,23 +407,34 @@ verified_at: 2026-10-02
 
 **有效期取法（2026-10-08 定）：**每条规则的 valid = [verified_at, verified_at + 90 天] ∩ 官网公布的时间窗（官网没写时间窗就只取前者）。官网写「每年 11 月 1 日」这类不带年份的规则，只展开到有效期内的具体日期。过了有效期 → 第 1 步返回 UNKNOWN，提示回官网重核。原文摘录存 `data/sources/`。
 
-规则语义（你审定后交给 CC）：
+规则语义（2026-10-08 Aaron 审定；可执行版本是 tests/unit/test_is_open.py，括号里是 reason_code）：
 
 ```
-is_open(poi, date, time=None):
-  0  poi.status == PERMANENTLY_CLOSED             → CLOSED
-  1  没有任何基础规则的有效期覆盖 date              → UNKNOWN「数据未覆盖该日期」
-  2  命中例外（单日 / 区间 / rrule）：
-       多条且结论矛盾                              → UNKNOWN「数据冲突」
-       否则                                        → 用例外的结论
-  3  否则取当天星期对应的基础规则：
-       多条且结论矛盾                              → UNKNOWN「数据冲突」
-       有 open/close                              → OPEN（附时段、最后入场）
-       closed                                      → CLOSED
-  4  给了 time：判断能否入场（open ≤ time ≤ last_entry；预约类再提前 arrive_early_min）
-  5  verified_at 超过 N 天：结论不变，加 STALE 警告
-  所有结论带 rule_id、source_url、verified_at、代码算出的星期几
+is_open(poi, date, at=None):            # at 是景点当地时间；date 由调用方传入（铁律 3）
+  0  status == PERMANENTLY_CLOSED                → CLOSED（PERMANENTLY_CLOSED），rule_ids = ["status"]
+     status == TEMP_CLOSED（没写哪天恢复）        → UNKNOWN（TEMP_CLOSED）
+  1  没有任何基础规则的有效期覆盖 date             → UNKNOWN（NOT_COVERED）；有效期外的例外也不采信
+  2  命中单日例外（第 1 阶段只做单日；区间 / rrule 留到第 2 阶段，模型直接拒绝这类数据）：
+       多条且结论不同                             → UNKNOWN（CONFLICT），rule_ids 列出全部
+       否则                                       → 用例外的结论（EXCEPTION）
+  3  否则取当天星期、且有效期覆盖 date 的基础规则：
+       没有                                       → UNKNOWN（NO_RULE_FOR_WEEKDAY）：没写的星期不当闭馆
+       多条且结论不同                             → UNKNOWN（CONFLICT）；结论相同不算冲突
+       closed                                      → CLOSED（WEEKLY_RULE）
+       有 open/close                              → OPEN（WEEKLY_RULE），附时段、最后入场
+  4  给了 at，且当天结论是 OPEN：判断那一刻能否入场
+       at < open                                  → CLOSED（BEFORE_OPENING），仍附时段
+       有 last_entry 且 at > last_entry           → CLOSED（AFTER_LAST_ENTRY）
+       没有 last_entry 且 at ≥ close              → CLOSED（AFTER_CLOSING）
+       规则标了 outside_hours: UNKNOWN 时，上面三种都改成 UNKNOWN（OUTSIDE_KNOWN_HOURS）
+     当天是 CLOSED / UNKNOWN：给不给 at 结论都不变
+  （原第 5 步 STALE 取消：有效期最长 90 天，过期直接走第 1 步 UNKNOWN）
+  所有结论带 rule_ids、source_url、verified_at、代码算出的星期几、reason_code、一句话 reason
 ```
+
+outside_hours：官网只给了部分时段（如渔人堡只给收费时段）时用 UNKNOWN，默认 CLOSED。
+
+resolve_poi(query, city?)：名字（local / en / zh）和别名精确匹配，统一大小写、去变音符号、统一撇号、合并空白；不做子串或模糊匹配。0 个 → NOT_FOUND，1 个 → MATCH，多个 → AMBIGUOUS 并按 id 列出全部候选。候选带 poi_id、三种名字、城市、类别，前端以后可以直接渲染成选项让用户点选（Aaron 2026-10-08：同名追问后期在前端做成选项）。
 
 电路类比：基础规则是默认时序，例外是高优先级中断；有效期像校准证书的有效期，过期的读数不可信；UNKNOWN 是 X 态。
 

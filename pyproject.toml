@@ -38,3 +38,7 @@ line-length = 100
 [tool.ruff.lint]
 # T20 = flake8-print：把「禁止 print」变成 lint 错误，而不是靠自觉
 select = ["E", "F", "I", "UP", "B", "T20"]
+
+[tool.ruff.lint.isort]
+# 显式声明本项目的包，不让 ruff 按目录猜（tests/unit 下会猜错）
+known-first-party = ["travelkb"]

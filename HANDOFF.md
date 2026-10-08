@@ -13,11 +13,20 @@
 - 有效期取法写进 ROADMAP 第 7 节：valid = [verified_at, verified_at + 90 天] ∩ 官网时间窗
 - CLAUDE.md 铁律 6、ROADMAP 第 7 节：草稿标记改成 review: draft，status 只表示营业状态
 
-### 待 Aaron 定的规则语义（不定就没法写测试）
-1. **收费时段 ≠ 开放时段**：渔人堡官网给的是 Payment periods。收费时段外问「能进吗」，该答 CLOSED 还是 UNKNOWN？建议规则加 `outside_hours: UNKNOWN`（默认 CLOSED）
-2. **例外日要提前到第 1 阶段**：真实数据在有效期内就有例外（美术馆 10/9 改时间；农业博物馆和两座塔 11/1、12/24–26、1/1 闭馆）。第 1 阶段原计划不做第 2 步（例外），那样这些天会错答 OPEN。建议第 1 阶段就做「单日例外」，RRULE 留到第 2 阶段
-3. **只列开放日、没明说闭馆的星期**：国家美术馆、使徒塔的周一没有规则 → 查出 UNKNOWN。确认这样处理，或者从官网找到明确的周一闭馆说明再补
-4. 拆分的代价：「渔人堡」「沃伊达奇城堡」「圣史蒂芬大教堂」都会返回 AMBIGUOUS，模型每次都要追问是哪一部分。确认可以接受
+### 规则语义（Aaron 2026-10-08 定，已写进 ROADMAP 第 7 节）
+1. 规则加 `outside_hours: UNKNOWN | CLOSED`（默认 CLOSED）；渔人堡收费观景台用 UNKNOWN
+2. 第 1 阶段就做单日例外；区间 / rrule 留到第 2 阶段，数据模型直接拒绝这类数据（不静默忽略）
+3. 国家美术馆、使徒塔周一闭馆：Aaron 确认，已在 YAML 加 MON closed 规则。引擎的通用规则不变：没写的星期 → UNKNOWN
+4. 拆分后的同名追问可以接受；候选按「选项」设计（id、三种名字、城市、类别），前端以后渲染成可点选项
+5. CC 补充的两点，Aaron 审测试时一并确认：TEMP_CLOSED（没写恢复日期）→ UNKNOWN；原第 5 步 STALE 取消（90 天有效期已覆盖）
+
+### 单元测试（红，等 Aaron 审）
+- tests/unit/：test_models（20）、test_loader（4）、test_resolve（13）、test_is_open（26），共 63 个测试函数；tests/golden/test_data_files 1 个
+- 目前全部因为 `No module named 'travelkb.core'` 收集失败——这是预期的红；test_server 的 2 个 ping 测试仍绿
+- 测试定下的接口：core/models.py（Poi 等）、core/loader.py（load_pois）、core/resolve.py（resolve_poi）、core/hours.py（is_open）
+- 结果里用 reason_code 给机器判分（评测用），reason 给模型看
+- 发现：pydantic 默认把整数 600 悄悄转成 00:10，所以「时间必须是带引号的字符串」要在模型里显式校验（有专门的测试）
+- pyproject：ruff isort 显式声明 travelkb 为本项目包
 
 ### 待 Aaron 核对的数据
 - 渔人堡官网 Opening period 写的是「2025」，标题是「2026」，疑似官网笔误
@@ -30,9 +39,10 @@
 - ROADMAP 第 2 阶段用国家美术馆举「每月最后一个周一闭」，这次官网原文不支持，要换例子
 
 ### 下一步
-1. Aaron：回答上面 4 条语义问题；逐条核对 12 个 YAML，核对完把 review 改成 verified
-2. CC：按定下来的语义写 tests/unit（假数据）给 Aaron 审，再写 Pydantic 数据模型 + validate_data.py + build_db.py + core 的 resolve_poi / is_open
-3. Aaron：用这批真实数据写 10 条金标准（城内同名用「美术馆」；闭馆日用 MFAB 周一；窗外日期用大教堂 12/30 之后；例外日用农业博物馆 11/1；晚于最后入场用国家美术馆 17:30）
+1. Aaron：审 tests/unit/ 的测试（重点看 test_is_open.py 每条断言是不是你认同的语义）；要改哪条直接说
+2. CC：测试审过后实现 core/models、loader、resolve、hours，跑到全绿；不改测试
+3. 之后：build_db.py（YAML → SQLite）+ validate_data.py（例外是否落在有效期内、有效期是否超 90 天、别名撞车清单）+ server 注册 resolve_poi / is_open
+4. Aaron：逐条核对 12 个 YAML（review 改成 verified）；写 10 条金标准
 
 ### 已知问题
 - 日志配置依赖 SDK 的实现细节（MCPServer.__init__ 里的 configure_logging）；SDK 升级后若不再配置，INFO 日志会丢，但 WARNING 以上仍走 stderr，不会写到 stdout

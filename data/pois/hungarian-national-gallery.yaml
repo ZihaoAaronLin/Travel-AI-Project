@@ -1,6 +1,5 @@
 # 来源原文：data/sources/2026-10-08-official-pages.md（国家美术馆）
-# 待定：官网只写「Tuesday – Sunday」，没有明说周一闭馆 → 不写 MON 规则，周一查出 UNKNOWN。
-#   Aaron 若在官网找到明确的周一闭馆说明，再加一条 closed 规则
+# 周一：官网只写「Tuesday – Sunday」，没明说周一闭馆；Aaron 2026-10-08 确认周一闭馆 → r2
 # 注意：ROADMAP 第 2 阶段拿它举「每月最后一个周一闭」的例子，这页原文不支持，需要换例子
 # 未覆盖：穹顶（看天气，到 17:00）、哈布斯堡墓室（需预约）不单列
 # 有效期 = 核验日起 90 天（官网未写有效期）
@@ -21,6 +20,11 @@ rules:
     open: "10:00"
     close: "18:00"
     last_entry: "17:00"
+  # Aaron 2026-10-08 确认（官网原文未明写）
+  - id: r2
+    valid: [2026-10-08, 2027-01-06]
+    days: [MON]
+    closed: true
 exceptions: []
 source_url: https://en.mng.hu
 verified_at: 2026-10-08
