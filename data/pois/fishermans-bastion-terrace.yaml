@@ -1,0 +1,26 @@
+# 来源原文：data/sources/2026-10-08-official-pages.md（Fisherman's Bastion Terrace 2026）
+# 待核 1：标题写 2026，但 Opening period 一行写「January 2 – December 23, 2025」，疑似官网笔误
+# 待定 2：官网给的是 Payment periods（收费时段），不是开放时段；收费时段外能不能进，官网没写。
+#   本草稿把收费时段写成 open/close。规则语义定下来之前，不要把「收费时段外」当成 CLOSED
+# 未覆盖：Free days 12/24–12/31 只说免费、没给时段 → 不写规则，查出 UNKNOWN；
+#   10/23 国定假日免费，但时段不变，不影响开闭，不单列例外
+# 有效期 = 核验日起 90 天（2026-10-08 ~ 2027-01-06）∩ 官网收费期（到 12/23）
+id: fishermans-bastion-terrace
+city: Budapest
+country: HU
+tz: Europe/Budapest
+category: viewpoint
+status: OPEN
+review: draft
+names: {local: Halászbástya, en: "Fisherman's Bastion Terrace", zh: 渔人堡收费观景台}
+aliases: [渔人堡, "Fisherman's Bastion", 渔夫堡]
+rules:
+  # 原文：October 1 – December 23: 9:00 AM – 7:00 PM（收费时段）
+  - id: r1
+    valid: [2026-10-08, 2026-12-23]
+    days: [MON, TUE, WED, THU, FRI, SAT, SUN]
+    open: "09:00"
+    close: "19:00"
+exceptions: []
+source_url: https://ticket.budavar.hu/en
+verified_at: 2026-10-08

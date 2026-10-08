@@ -103,7 +103,7 @@ CLAUDE.md 模板（第 0 阶段原样交给 CC）：
 3. 日期按景点所在时区的本地日期；core 里不许调用 now()，日期一律由调用方传入。需要「今天」时，由 server.py 按景点时区（ZoneInfo(poi.tz)）算出当地日期再传给 core
 4. 返回给模型的每个结论都带 rule_id、source_url、verified_at
 5. 先写测试再实现；不许为了通过测试去改测试，要改先问我
-6. 不许编造数据。data/ 里的事实只来自我核验过的官方来源；你起草的条目标 status: draft
+6. 不许编造数据。data/ 里的事实只来自我核验过的官方来源；你起草的条目标 review: draft（status 字段专指营业状态）
 7. YAML 里的时间一律加引号（"10:00"）：不加引号会被解析成整数 600
 8. 函数短小，不直观的逻辑写注释。我要能在面试里讲清每一行
 9. 每次会话结束更新 HANDOFF.md：做了什么、没做完什么、下一步、已知问题
@@ -375,7 +375,8 @@ city: Budapest
 country: HU
 tz: Europe/Budapest
 category: museum
-status: OPEN                 # OPEN / TEMP_CLOSED / PERMANENTLY_CLOSED
+status: OPEN                 # 营业状态：OPEN / TEMP_CLOSED / PERMANENTLY_CLOSED
+review: draft                # 核验状态：draft（CC 起草）/ verified（Aaron 核对过）
 names: {local: Példa Múzeum, en: Demo Museum, zh: 示例博物馆}
 aliases: [示例馆, 美术馆]      # 「美术馆」与另一家撞车 → 必须有同名金标准
 booking: {required: true, arrive_early_min: 30}
@@ -403,6 +404,8 @@ exceptions:                  # 优先级高于基础规则
 source_url: https://example.org/hours
 verified_at: 2026-10-02
 ```
+
+**有效期取法（2026-10-08 定）：**每条规则的 valid = [verified_at, verified_at + 90 天] ∩ 官网公布的时间窗（官网没写时间窗就只取前者）。官网写「每年 11 月 1 日」这类不带年份的规则，只展开到有效期内的具体日期。过了有效期 → 第 1 步返回 UNKNOWN，提示回官网重核。原文摘录存 `data/sources/`。
 
 规则语义（你审定后交给 CC）：
 

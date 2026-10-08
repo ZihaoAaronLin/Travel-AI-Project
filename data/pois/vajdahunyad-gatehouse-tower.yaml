@@ -1,0 +1,30 @@
+# 来源原文：data/sources/2026-10-08-official-pages.md（沃伊达奇城堡 / 匈牙利农业博物馆）
+# 和博物馆不同：周一也开，9 点开门
+# 匈牙利语名官网这页没给，待 Aaron 补；中文名是 CC 的译名
+# 有效期 = 核验日起 90 天（官网未写有效期）
+id: vajdahunyad-gatehouse-tower
+city: Budapest
+country: HU
+tz: Europe/Budapest
+category: tower
+status: OPEN
+review: draft
+names: {local: null, en: Gatehouse Tower, zh: 沃伊达奇城堡城门塔}
+aliases: [城门塔, Gatehouse Tower]
+rules:
+  # 原文：Monday to Sunday: 9 am to 5 pm; last admission to the Gatehouse Tower 15 min before closing
+  - id: r1
+    valid: [2026-10-08, 2027-01-06]
+    days: [MON, TUE, WED, THU, FRI, SAT, SUN]
+    open: "09:00"
+    close: "17:00"
+    last_entry: "16:45"
+exceptions:
+  # 原文：The Museum and the Towers are closed: on 1 November / on 24, 25, 26 December / on 1 January
+  - {id: e1, date: 2026-11-01, closed: true, reason: 11 月 1 日闭馆（万圣节）}
+  - {id: e2, date: 2026-12-24, closed: true, reason: 12 月 24 日闭馆}
+  - {id: e3, date: 2026-12-25, closed: true, reason: 12 月 25 日闭馆}
+  - {id: e4, date: 2026-12-26, closed: true, reason: 12 月 26 日闭馆}
+  - {id: e5, date: 2027-01-01, closed: true, reason: 1 月 1 日闭馆}
+source_url: https://www.mezogazdasagimuzeum.hu/information/opening-hours
+verified_at: 2026-10-08

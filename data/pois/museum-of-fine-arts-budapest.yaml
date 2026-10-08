@@ -1,0 +1,37 @@
+# 来源原文：data/sources/2026-10-08-official-pages.md（布达佩斯美术馆）
+# 「美术馆」和匈牙利国家美术馆撞车 → 城内同名金标准
+# 有效期 = 核验日起 90 天（官网未写有效期）
+# 未覆盖：版画素描厅（Hall of Prints and Drawings）关闭，不单列
+id: museum-of-fine-arts-budapest
+city: Budapest
+country: HU
+tz: Europe/Budapest
+category: museum
+status: OPEN
+review: draft
+names: {local: Szépművészeti Múzeum, en: "Museum of Fine Arts, Budapest", zh: 布达佩斯美术馆}
+aliases: [美术馆, 布达佩斯美术博物馆, Museum of Fine Arts, MFAB]
+rules:
+  # 原文：Tuesday to Sunday: OPEN 10.00-18.00; Ticket office and admission: until 17.00
+  - id: r1
+    valid: [2026-10-08, 2027-01-06]
+    days: [TUE, WED, THU, FRI, SAT, SUN]
+    open: "10:00"
+    close: "18:00"
+    last_entry: "17:00"
+  # 原文：Monday: CLOSED
+  - id: r2
+    valid: [2026-10-08, 2027-01-06]
+    days: [MON]
+    closed: true
+exceptions:
+  # 原文：We are open on 9 OCTOBER from 12.00 to 20.00 ... ticket office and entrance are open until 19.00
+  # 官网没写年份；同一弹窗写着「Today, October 8」，Aaron 2026-10-08 看到 → 判定为 2026-10-09
+  - id: e1
+    date: 2026-10-09
+    open: "12:00"
+    close: "20:00"
+    last_entry: "19:00"
+    reason: 调整开放时间（晚场活动）
+source_url: https://www.mfab.hu
+verified_at: 2026-10-08

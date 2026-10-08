@@ -1,0 +1,16 @@
+# 渔人堡不收费的部分。没有任何官方来源写它的开放时间 → 不写规则，任何日期都查出 UNKNOWN
+# 保留这条记录的原因：否则「渔人堡」只会匹配到收费观景台，模型会把收费时段当成整个渔人堡的开放时间。
+# 有了这条，「渔人堡」→ AMBIGUOUS，逼模型问清楚是哪一部分
+id: fishermans-bastion-free-areas
+city: Budapest
+country: HU
+tz: Europe/Budapest
+category: viewpoint
+status: OPEN
+review: draft
+names: {local: Halászbástya, en: "Fisherman's Bastion (free areas)", zh: 渔人堡免费区域}
+aliases: [渔人堡, "Fisherman's Bastion", 渔夫堡]
+rules: []
+exceptions: []
+source_url: null
+verified_at: null

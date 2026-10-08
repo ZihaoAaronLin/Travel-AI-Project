@@ -1,0 +1,15 @@
+# 沃伊达奇城堡的露天庭院。官方博物馆页面没提庭院 → 不写规则，任何日期都查出 UNKNOWN
+# 第三方站 vajdahunyadcastle.com 说庭院全天开放，但它不是官方站，不能当来源
+id: vajdahunyad-castle-courtyard
+city: Budapest
+country: HU
+tz: Europe/Budapest
+category: landmark
+status: OPEN
+review: draft
+names: {local: Vajdahunyad vára, en: Vajdahunyad Castle (courtyard), zh: 沃伊达奇城堡庭院}
+aliases: [沃伊达奇城堡, Vajdahunyad Castle, Vajdahunyad]
+rules: []
+exceptions: []
+source_url: null
+verified_at: null

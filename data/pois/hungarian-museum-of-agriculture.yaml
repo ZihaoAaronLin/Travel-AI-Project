@@ -1,0 +1,38 @@
+# 来源原文：data/sources/2026-10-08-official-pages.md（沃伊达奇城堡 / 匈牙利农业博物馆）
+# 博物馆就在沃伊达奇城堡里，所以带「沃伊达奇城堡」别名，和庭院、两座塔一起构成同名候选
+# 对照：第三方站 vajdahunyadcastle.com 写的是冬季（11/1–3/31）周二至周五 10–16 点，
+#   官网写全年周二至周日 10–17 点。两者不一致，以官网为准——这是「只用官方来源」的现成例子
+# 有效期 = 核验日起 90 天（官网未写有效期）
+# 例外：官网节假日写的是「每年 11/1、12/24–26、1/1 闭馆」（不带年份），这里只展开到有效期内的具体日期
+id: hungarian-museum-of-agriculture
+city: Budapest
+country: HU
+tz: Europe/Budapest
+category: museum
+status: OPEN
+review: draft
+names: {local: Magyar Mezőgazdasági Múzeum, en: Hungarian Museum of Agriculture, zh: 匈牙利农业博物馆}
+aliases: [农业博物馆, 沃伊达奇城堡, Vajdahunyad Castle, Vajdahunyad]
+rules:
+  # 原文：Museum and Apostles' Tower: Tuesday to Sunday: 10 am to 5 pm;
+  #       last admission to the Museum 30 min before closing
+  - id: r1
+    valid: [2026-10-08, 2027-01-06]
+    days: [TUE, WED, THU, FRI, SAT, SUN]
+    open: "10:00"
+    close: "17:00"
+    last_entry: "16:30"
+  # 原文：On Mondays the Museum is closed.
+  - id: r2
+    valid: [2026-10-08, 2027-01-06]
+    days: [MON]
+    closed: true
+exceptions:
+  # 原文：The Museum and the Towers are closed: on 1 November / on 24, 25, 26 December / on 1 January
+  - {id: e1, date: 2026-11-01, closed: true, reason: 11 月 1 日闭馆（万圣节）}
+  - {id: e2, date: 2026-12-24, closed: true, reason: 12 月 24 日闭馆}
+  - {id: e3, date: 2026-12-25, closed: true, reason: 12 月 25 日闭馆}
+  - {id: e4, date: 2026-12-26, closed: true, reason: 12 月 26 日闭馆}
+  - {id: e5, date: 2027-01-01, closed: true, reason: 1 月 1 日闭馆}
+source_url: https://www.mezogazdasagimuzeum.hu/information/opening-hours
+verified_at: 2026-10-08

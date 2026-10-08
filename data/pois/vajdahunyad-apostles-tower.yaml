@@ -1,0 +1,32 @@
+# 来源原文：data/sources/2026-10-08-official-pages.md（沃伊达奇城堡 / 匈牙利农业博物馆）
+# 只能跟导览上塔：每整点一团，最后一团在闭馆前 1 小时出发 → last_entry 16:00
+# 待定：官网只写「Museum and Apostles' Tower: Tuesday to Sunday」，「On Mondays」只说博物馆闭馆，
+#   没明说塔周一闭 → 不写 MON 规则，周一查出 UNKNOWN（和国家美术馆同一类问题）
+# 匈牙利语名官网这页没给，待 Aaron 补；中文名是 CC 的译名
+# 有效期 = 核验日起 90 天（官网未写有效期）
+id: vajdahunyad-apostles-tower
+city: Budapest
+country: HU
+tz: Europe/Budapest
+category: tower
+status: OPEN
+review: draft
+names: {local: null, en: "Apostles' Tower", zh: 沃伊达奇城堡使徒塔}
+aliases: [使徒塔, "Apostles' Tower"]
+rules:
+  # 原文：Tuesday to Sunday: 10 am to 5 pm; Last tour starts one hour before closing
+  - id: r1
+    valid: [2026-10-08, 2027-01-06]
+    days: [TUE, WED, THU, FRI, SAT, SUN]
+    open: "10:00"
+    close: "17:00"
+    last_entry: "16:00"
+exceptions:
+  # 原文：The Museum and the Towers are closed: on 1 November / on 24, 25, 26 December / on 1 January
+  - {id: e1, date: 2026-11-01, closed: true, reason: 11 月 1 日闭馆（万圣节）}
+  - {id: e2, date: 2026-12-24, closed: true, reason: 12 月 24 日闭馆}
+  - {id: e3, date: 2026-12-25, closed: true, reason: 12 月 25 日闭馆}
+  - {id: e4, date: 2026-12-26, closed: true, reason: 12 月 26 日闭馆}
+  - {id: e5, date: 2027-01-01, closed: true, reason: 1 月 1 日闭馆}
+source_url: https://www.mezogazdasagimuzeum.hu/information/opening-hours
+verified_at: 2026-10-08
