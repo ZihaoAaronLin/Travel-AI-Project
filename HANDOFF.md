@@ -22,8 +22,22 @@
 - ROADMAP 第 7 节：第 2 步改成三选一；新增第 5 步（建议与提醒）；YAML 示例补 dates 写法、修了原示例里只写 close 没写 open 的错；第 5 阶段记下 Aaron 的「自动排时间表」想法（之后再做）
 - 真实数据演示：农业博物馆 2026-12-24（例外闭馆）→ next_open_date 2026-12-27
 
+### 2b 测试（红，等 Aaron 审）
+- tests/unit/test_day_plan.py（16）：check_day_plan(pois, day, stops, as_of=None)
+  - 输入：Stop(poi_id, arrive, leave=None)，按到达顺序给；不算路上时间
+  - 输出 DayPlanReport：ok、date、weekday、stops[逐站结论]、issues[问题]、counts、warnings[STALE，每个景点只报一次]
+  - 问题：id（I1、I2…按站点顺序）、severity、code、stop_index、related_stop_index（重叠时指向上一站）、fix（机器可读）、suggestion（给模型，含具体数值）
+  - 级别表：CLOSED_DAY / AFTER_LAST_ENTRY / OVERLAP → BLOCKER；BEFORE_OPENING / LEAVE_AFTER_CLOSE → WARNING；UNVERIFIED → UNKNOWN
+  - ok = 没有 BLOCKER 也没有 UNKNOWN（WARNING 不影响通过）
+  - fix 取值：CHANGE_DATE、ARRIVE_EARLIER、ARRIVE_LATER、LEAVE_EARLIER、CHECK_OFFICIAL（REPLACE_POI 作为 CLOSED_DAY 建议里的第二选项写在 suggestion 里）
+  - 「修完再验就通过」有专门一条测试，对应 Aaron 要的「逐一解决」
+- tests/unit/test_find_open.py（6）：find_open_pois(pois, city, day, at=None, category=None) → open[]（只列结论 OPEN 的，按 id 排）+ unverified[]（说不准的单独列，让模型知道不是没有而是没法核验）
+- tests/unit/test_tools_day_plan.py（7）：两个工具注册且只读；描述里写明不算路上时间、先 resolve、闭馆用 find_open_pois 换；stops 用 [{poi_id, arrive, leave?}] 传；不给日期用景点当地今天；坏 poi_id / 坏时刻以 is_error 告诉模型
+- 现状：3 个文件因 travelkb.core.plan 不存在而收集失败（预期的红）；其余 159 条照常通过
+
 ### 下一步
-1. CC：写 2b 的测试（check_day_plan + find_open_pois）给 Aaron 审——问题逐条带编号、站点、修复建议
+1. Aaron：审 2b 测试（重点：级别表、fix 取值、ok 的定义、OVERLAP 的判法）
+2. CC：审过后实现 core/plan.py + server 两个工具
 2. Aaron：Desktop 验收结果；2c 的新景点（官网原文）可以开始挑
 3. 之后 2d 题库 + 评测脚本，2e query_kb
 
