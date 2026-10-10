@@ -20,87 +20,87 @@
   question: 2026-10-13（周二）去布达佩斯美术馆，开门吗？几点到几点？
   call: {tool: is_open, args: {poi_id: museum-of-fine-arts-budapest, date: 2026-10-13}}
   check: https://www.mfab.hu 的开放时间弹窗
-  expect: null
-  source_url: null
-  checked_at: null
+  expect: 开门，10-13是周二，没有别的活动冲突，正常开门10:00-18:00
+  source_url: https://www.mfab.hu
+  checked_at: 10/10/2026
 
 - id: g02
   type: weekly_closed
   question: 2026-10-12（周一）去布达佩斯美术馆，开门吗？
   call: {tool: is_open, args: {poi_id: museum-of-fine-arts-budapest, date: 2026-10-12}}
   check: https://www.mfab.hu 的开放时间弹窗
-  expect: null
-  source_url: null
-  checked_at: null
+  expect: 不开门，10-12是周一，每周一固定休假
+  source_url: https://www.mfab.hu
+  checked_at: 10/10/2026
 
 - id: g03
   type: out_of_window
   question: 2027-01-12 去圣史蒂芬大教堂，开门吗？
   call: {tool: is_open, args: {poi_id: st-stephens-basilica-church, date: 2027-01-12}}
   check: 规则语义——有效期 = 核验日 2026-10-08 起 90 天；对照 ROADMAP 第 7 节第 1 步
-  expect: null
-  source_url: null
-  checked_at: null
+  expect: 找不到，出行日期距今超过未来90天，须核验
+  source_url: https://bazilikabudapest.hu/nyitvatartas/
+  checked_at: 10/10/2026
 
 - id: g04
   type: same_name_in_city
   question: 下周去布达佩斯的「美术馆」，是哪一家？
   call: {tool: resolve_poi, args: {query: 美术馆, city: Budapest}}
   check: 两家官网各自的名称：https://en.mng.hu 、https://www.mfab.hu
-  expect: null
-  source_url: null
-  checked_at: null
+  expect: 询问用户具体是哪个美术馆（可以摆出两个标志性作品以帮助区分）
+  source_url: https://en.mng.hu 、https://www.mfab.hu
+  checked_at: 10/10/2026
 
 - id: g05
   type: not_in_kb
   question: 盖勒特温泉几点开门？（库里没有这个景点）
   call: {tool: resolve_poi, args: {query: 盖勒特温泉, city: Budapest}}
   check: 规则语义——库里没有的景点不能猜
-  expect: null
-  source_url: null
-  checked_at: null
+  expect: 告知用户暂未收录
+  source_url: https://www.gellertbath.hu/
+  checked_at: 10/10/2026
 
 - id: g06
   type: after_last_entry
   question: 2026-10-14（周三）17:30 到匈牙利国家美术馆，还能进吗？
   call: {tool: is_open, args: {poi_id: hungarian-national-gallery, date: 2026-10-14, time: "17:30"}}
   check: https://en.mng.hu 的开放时间弹窗
-  expect: null
-  source_url: null
-  checked_at: null
+  expect: 虽然官网写entry from 10am to 6pm，但是5pm从顶楼开始清人，原文：“Entry is allowed until 5.00 pm – also with pre-purchased or free tickets.”，故不能进
+  source_url: https://en.mng.hu
+  checked_at: 10/10/2026
 
 - id: g07
   type: exception_closed
   question: 2026-11-01（周日）去沃伊达奇城堡里的农业博物馆，开门吗？
   call: {tool: is_open, args: {poi_id: hungarian-museum-of-agriculture, date: 2026-11-01}}
   check: https://www.mezogazdasagimuzeum.hu/information/opening-hours 的 Public Holidays 一节
-  expect: null
-  source_url: null
-  checked_at: null
+  expect: 虽然不是周一日常闭馆，但是11-01是public holiday往下拉有写，故不开门
+  source_url: https://www.mezogazdasagimuzeum.hu/information/opening-hours
+  checked_at: 10/10/2026
 
 - id: g08
   type: exception_changed_hours
   question: 2026-10-09（周五）11:00 到布达佩斯美术馆，能进吗？
   call: {tool: is_open, args: {poi_id: museum-of-fine-arts-budapest, date: 2026-10-09, time: "11:00"}}
   check: https://www.mfab.hu 弹窗里的 Changed opening hours
-  expect: null
-  source_url: null
-  checked_at: null
+  expect: Changed opening hours是Friday，13 November，故落在常规时间段10:00-18:00，所以能进
+  source_url: https://www.mfab.hu
+  checked_at: 10/10/2026
 
 - id: g09
   type: outside_known_hours
   question: 2026-10-15（周四）20:30 去渔人堡收费观景台，能进吗？
   call: {tool: is_open, args: {poi_id: fishermans-bastion-terrace, date: 2026-10-15, time: "20:30"}}
   check: https://ticket.budavar.hu/en 的弹窗——注意它写的是 Payment periods，不是开放时段
-  expect: null
-  source_url: null
-  checked_at: null
+  expect: 能进，payment period只是代表这段时间段是需要付费的，outside这些时间段则免费，理论上是24/7开放的。但找不到确切信息，须如实告知用户
+  source_url: https://ticket.budavar.hu/en
+  checked_at: 10/10/2026
 
 - id: g10
   type: season_boundary
   question: 2026-11-02（周一）17:00 到国会大厦，还开着吗？
   call: {tool: is_open, args: {poi_id: hungarian-parliament, date: 2026-11-02, time: "17:00"}}
   check: https://www.parlament.hu/web/visitors/opening-hours（注意 11 月 1 日起换季）
-  expect: null
-  source_url: null
-  checked_at: null
+  expect: 不开，十一月到十二月下午四点就关门了
+  source_url: https://www.parlament.hu/web/visitors/opening-hours
+  checked_at: 10/10/2026
