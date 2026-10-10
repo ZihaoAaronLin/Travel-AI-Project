@@ -21,7 +21,6 @@
 2. Desktop 里问「下周一去布达佩斯美术馆」：模型应先调 resolve_poi，拿到 AMBIGUOUS 后问你是哪一家；截图留给 README
 3. Inspector：「美术馆」+ Budapest → AMBIGUOUS；闭馆日 → CLOSED 带 source_url；窗外日期 → UNKNOWN
 4. Claude Desktop 的 Project 指令里写最简 SOP（A 版起点）：先 resolve_poi 再 is_open；AMBIGUOUS 就问；UNKNOWN 就说不确定并给官网链接
-5. 确认 g08 的 expect
 
 ### 已知问题 / 之后
 - 同名撞车 4 组（渔人堡、沃伊达奇城堡、大教堂、美术馆），只有「美术馆」有金标准；ROADMAP 要求每组都有，第 2 阶段补
