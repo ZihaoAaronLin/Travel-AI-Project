@@ -38,6 +38,10 @@ def run_call(call: dict) -> dict:
 def test_golden_case(case):
     if case["expect"] is None:
         pytest.skip(f"{case['id']}：待 Aaron 回官网核对后填写 expect")
+    assert isinstance(case["expect"], dict), (
+        f"{case['id']}：expect 要写成字段，例如 {{status: CLOSED, weekday: MON}}；"
+        "判断理由写在 note 里"
+    )
     assert case["source_url"] and case["checked_at"], "填了 expect 就要写 source_url 和 checked_at"
 
     actual = run_call(case["call"])

@@ -1,5 +1,28 @@
 # HANDOFF
 
+## 2026-10-10 · 金标准第一轮
+
+### 做了什么
+- Aaron 填了 10 条金标准（commit 42a6b6d），但 expect 写成了中文判断句，runner 读不了（10 条都报 AttributeError）
+- CC 只做格式转换：每条结论按原意译成字段（status / weekday / reason_code / 时刻 / 候选），Aaron 原话原样保留在 note；checked_at 改成 ISO 日期
+- runner：expect 不是字段时给出明确提示；模板说明补了一行可照抄的例子
+- 结果：9 通过，g08 失败（期望 OPEN，引擎答 CLOSED）
+
+### g08 失败的归因：金标准过期，不是引擎错
+- Aaron 10/08 的官网原文（data/sources/2026-10-08-official-pages.md 第 63–65 行）写着「We are open on 9 OCTOBER from 12.00 to 20.00」→ 10/09 11:00 进不去，引擎对
+- 10/10 再看官网时，10/09 已过去、这条被删，页面换成了下一个特殊日「Friday, 13 November」；按新页面推断 10/09 是常规时间，结论就错了
+- 按铁律 5 没改 Aaron 的答案，g08 保持红，等 Aaron 定
+
+### 新发现：数据已经过期了一处
+- 官网 10/08 之后新公布了 2026-11-13（周五）的调整，data/pois/museum-of-fine-arts-budapest.yaml 里没有 → 引擎现在会按常规时间回答 11/13，可能答错
+- 90 天有效期假设「核验后官网不会新增例外」，这次两天就被推翻：临时调整类信息需要更短的复核周期（第 2 阶段设计 STALE / 复核策略时用这个例子）
+
+### 待 Aaron
+1. g08 二选一：改成你按 10/08 原文的判断；或者（建议）把题改成 2026-11-13，因为 10/09 已经没法在官网复核了
+2. 复制布达佩斯美术馆官网 13 November 的调整原文 → CC 补进 data/sources 和 YAML（e2）
+3. 确认 CC 对 g09 的转换：你的原话先说「能进」，后说「找不到确切信息，须如实告知用户」，CC 译成 UNKNOWN
+4. 审 test_tools.py、test_validate.py（上一批红测试）
+
 ## 2026-10-08（下午）· core 实现 + 金标准骨架
 
 ### 做了什么
