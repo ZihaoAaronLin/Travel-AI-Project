@@ -22,7 +22,7 @@ from mcp.server.mcpserver.exceptions import ToolError
 from mcp.types import ToolAnnotations
 from pydantic import BaseModel, Field
 
-from travelkb.core.hours import OpenResult
+from travelkb.core.hours import Caveat, OpenResult
 from travelkb.core.hours import is_open as judge_opening
 from travelkb.core.loader import load_pois
 from travelkb.core.models import Poi
@@ -74,6 +74,10 @@ class IsOpenOutput(BaseModel):
     last_entry: str | None
     source_url: str | None
     verified_at: str | None
+    next_open_date: str | None = Field(
+        description="去不了时，下一个确定能去的日子 YYYY-MM-DD；可以据此建议改天"
+    )
+    warnings: list[Caveat] = Field(description="结论之外的提醒，要转达给用户（如数据可能过期）")
 
 
 def build_server(pois: Sequence[Poi], clock: Clock = utc_now) -> MCPServer:
@@ -138,13 +142,15 @@ def build_server(pois: Sequence[Poi], clock: Clock = utc_now) -> MCPServer:
                 f"未知 poi_id {poi_id!r}：先调 resolve_poi 拿到 poi_id，不要直接传景点名"
             )
 
+        # 「今天」只在这里取一次：不给日期时拿它当判定日期，另外用它判断数据有没有过期（铁律 3）
+        today = _local_today(poi, clock)
         if date is None:
-            day, date_source = _local_today(poi, clock), "poi_local_today"
+            day, date_source = today, "poi_local_today"
         else:
             day, date_source = _parse_date(date), "caller"
         at = None if time is None else _parse_time(time)
 
-        result = judge_opening(poi, day, at)
+        result = judge_opening(poi, day, at, as_of=today)
         logger.info("is_open %s %s %s -> %s", poi_id, day, time, result.status)
         return _to_output(result, date_source)
 
@@ -192,6 +198,8 @@ def _to_output(result: OpenResult, date_source: str) -> IsOpenOutput:
         last_entry=hhmm(result.last_entry),
         source_url=result.source_url,
         verified_at=result.verified_at.isoformat() if result.verified_at else None,
+        next_open_date=result.next_open_date.isoformat() if result.next_open_date else None,
+        warnings=result.warnings,
     )
 
 

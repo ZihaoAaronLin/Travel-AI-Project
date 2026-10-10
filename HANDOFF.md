@@ -13,14 +13,19 @@
   - 「check_day_plan 的问题能逐一解决」→ 每个问题带编号、站点、修复建议，模型逐条修完再验（2b 的测试里体现）
 - 同名撞车组的金标准：Aaron 说先不补，放到 2c
 
-### 2a 测试（红，等 Aaron 审）
-- tests/unit/test_exception_kinds.py：date / dates / rrule 三选一；8 种写错要拒收（含 rrule 里夹 DTSTART——dateutil 会悄悄用它覆盖起点）；区间、每月最后一个周一、rrule 只在自己的 valid 内生效、不同写法撞在同一天算冲突
-- tests/unit/test_suggestions.py：next_open_date（跳过连续闭馆日、绝不推荐 UNKNOWN 的日子、窗口外不推荐、还没开门/开着/UNKNOWN/永久停业时不给）；STALE（不给 as_of 不判断、第 14 天不算、第 15 天提醒且结论不变）
-- tests/unit/test_validate_exceptions.py：区间 / rrule 覆盖到有效期外 → error；不同写法撞同一天且结论不同 → error
-- tests/unit/test_tools_suggestions.py：工具输出 next_open_date、warnings；过期按景点当地日期判断（UTC 还是第 14 天、布达佩斯已是第 15 天）
-- 现状：28 条红（未实现），8 条「写错要拒收」已经绿（现有模型本来就拒收不认识的字段）；原有 131 条照常通过
-- 测试定下的接口：is_open(poi, day, at=None, as_of=None)；OpenResult 新增 next_open_date、warnings[{code, message}]；DayException 新增 dates、rrule、valid
-- 旧测试 test_models.py::test_rrule_exception_is_rejected_in_stage_1 仍然成立（date + rrule 同时写违反三选一），但名字和注释已过时；要不要改名等 Aaron 定（铁律 5）
+### 2a 已实现（Aaron 放行后；tests/ 只按 Aaron 同意改了一个测试名）
+- 全部 159 条测试通过；真实数据 validate_data 仍是 error 0、warning 0
+- models.py：DayException 三选一（date / dates / rrule + valid），rrule 只收规则本身（带冒号或换行一律拒收，防 DTSTART 覆盖起点）；covers(day) / days() 两个方法，引擎和校验共用，三种写法不会各走各的逻辑
+- hours.py：is_open(..., as_of=None)；OpenResult 新增 next_open_date、warnings；STALE_AFTER_DAYS = 14
+- validate.py：区间 / rrule 覆盖的每一天都要在规则有效期内；不同写法撞同一天且结论不同 → 每组报第一天
+- server.py：「今天」只取一次，既当缺省日期又当 as_of；输出 next_open_date、warnings
+- ROADMAP 第 7 节：第 2 步改成三选一；新增第 5 步（建议与提醒）；YAML 示例补 dates 写法、修了原示例里只写 close 没写 open 的错；第 5 阶段记下 Aaron 的「自动排时间表」想法（之后再做）
+- 真实数据演示：农业博物馆 2026-12-24（例外闭馆）→ next_open_date 2026-12-27
+
+### 下一步
+1. CC：写 2b 的测试（check_day_plan + find_open_pois）给 Aaron 审——问题逐条带编号、站点、修复建议
+2. Aaron：Desktop 验收结果；2c 的新景点（官网原文）可以开始挑
+3. 之后 2d 题库 + 评测脚本，2e query_kb
 
 ## 2026-10-10（晚）· MCP 工具上线 + 数据校验
 

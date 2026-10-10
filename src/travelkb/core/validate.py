@@ -68,32 +68,44 @@ def _outside_trust_window(poi: Poi, verified_at: dt.date) -> list[Issue]:
 
 
 def _uncovered_exceptions(poi: Poi) -> list[Issue]:
-    """引擎第 1 步不采信有效期外的例外：这种例外写了等于白写。"""
-    return [
-        _issue(
-            "error",
-            "EXCEPTION_NOT_COVERED",
-            poi,
-            f"{exc.id}（{exc.date}）不在任何规则的有效期内，引擎不会采信",
-        )
-        for exc in poi.exceptions
-        if not any(rule.valid[0] <= exc.date <= rule.valid[1] for rule in poi.rules)
-    ]
+    """引擎第 1 步不采信有效期外的例外：例外覆盖的每一天都得落在某条规则的有效期内。
+
+    否则写了等于白写。
+    """
+    issues = []
+    for exc in poi.exceptions:
+        uncovered = [day for day in exc.days() if not _covered_by_a_rule(poi, day)]
+        if uncovered:
+            text = (
+                f"{exc.id} 覆盖的 {uncovered[0]} 等 {len(uncovered)} 天"
+                "不在任何规则的有效期内，引擎不会采信"
+            )
+            issues.append(_issue("error", "EXCEPTION_NOT_COVERED", poi, text))
+    return issues
+
+
+def _covered_by_a_rule(poi: Poi, day: dt.date) -> bool:
+    return any(rule.valid[0] <= day <= rule.valid[1] for rule in poi.rules)
 
 
 def _exception_conflicts(poi: Poi) -> list[Issue]:
+    """不同写法的例外（单日 / 区间 / rrule）撞在同一天且结论不同。每组冲突只报第一天。"""
     by_date = defaultdict(list)
     for exc in poi.exceptions:
-        by_date[exc.date].append(exc)
+        for day in exc.days():
+            by_date[day].append(exc)
+    first_clash: dict[tuple[str, ...], dt.date] = {}
+    for day, excs in sorted(by_date.items()):
+        if len({e.verdict_key() for e in excs}) > 1:
+            first_clash.setdefault(tuple(e.id for e in excs), day)
     return [
         _issue(
             "error",
             "EXCEPTION_CONFLICT",
             poi,
-            f"{day} 的例外 {'、'.join(e.id for e in excs)} 结论不同，这天会答 UNKNOWN",
+            f"{day} 的例外 {'、'.join(ids)} 结论不同，这天会答 UNKNOWN",
         )
-        for day, excs in sorted(by_date.items())
-        if len({e.verdict_key() for e in excs}) > 1
+        for ids, day in first_clash.items()
     ]
 
 

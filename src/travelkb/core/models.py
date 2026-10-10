@@ -5,6 +5,7 @@ import re
 from typing import Literal, Self
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
+from dateutil.rrule import rrulestr
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 Weekday = Literal["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"]
@@ -16,7 +17,7 @@ _HHMM = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
 
 
 class _Strict(BaseModel):
-    # 不认识的字段一律报错：比如第 1 阶段还不支持的 rrule，宁可加载失败也不能被静默忽略
+    # 不认识的字段一律报错：写错字段名宁可加载失败，也不能被静默忽略然后答错
     model_config = ConfigDict(extra="forbid")
 
 
@@ -81,11 +82,65 @@ class Rule(Hours):
 
 
 class DayException(Hours):
-    """单日例外（节假日闭馆、某天改时间），优先于基础规则。区间和 rrule 留到第 2 阶段。"""
+    """例外（节假日闭馆、某天改时间），优先于基础规则。三种写法恰好选一种：
+
+    - date：单日
+    - dates: [起, 止]：连续几天，首尾都算
+    - rrule + valid: [起, 止]：按规律重复（如 FREQ=MONTHLY;BYDAY=-1MO），只在 valid 内生效
+    """
 
     id: str
-    date: dt.date
     reason: str = Field(min_length=1)
+    date: dt.date | None = None
+    dates: tuple[dt.date, dt.date] | None = None
+    rrule: str | None = None
+    valid: tuple[dt.date, dt.date] | None = None
+
+    @model_validator(mode="after")
+    def _exactly_one_kind(self) -> Self:
+        kinds = [k for k in ("date", "dates", "rrule") if getattr(self, k) is not None]
+        if len(kinds) != 1:
+            raise ValueError(f"例外必须在 date / dates / rrule 里恰好写一个，收到 {kinds}")
+        if (self.rrule is None) != (self.valid is None):
+            raise ValueError("rrule 必须配 valid 写有效期；没有 rrule 就不能写 valid")
+        for name in ("dates", "valid"):
+            span = getattr(self, name)
+            if span is not None and span[0] > span[1]:
+                raise ValueError(f"{name} 起点 {span[0]} 晚于终点 {span[1]}")
+        if self.rrule is not None:
+            _check_rrule(self.rrule)
+        return self
+
+    def covers(self, day: dt.date) -> bool:
+        """这条例外管不管 day。引擎和校验都只通过这个方法判断，三种写法不会各走各的逻辑。"""
+        if self.date is not None:
+            return self.date == day
+        if self.dates is not None:
+            return self.dates[0] <= day <= self.dates[1]
+        return day in self.days()
+
+    def days(self) -> list[dt.date]:
+        """这条例外覆盖的全部日期（给校验用；rrule 只展开 valid 之内的）。"""
+        if self.date is not None:
+            return [self.date]
+        if self.dates is not None:
+            start, end = self.dates
+            return [start + dt.timedelta(days=i) for i in range((end - start).days + 1)]
+        assert self.rrule is not None and self.valid is not None
+        start = dt.datetime.combine(self.valid[0], dt.time())
+        end = dt.datetime.combine(self.valid[1], dt.time())
+        return [d.date() for d in rrulestr(self.rrule, dtstart=start).between(start, end, inc=True)]
+
+
+def _check_rrule(rule: str) -> None:
+    # 只收重复规则本身。dateutil 还接受 "DTSTART:...\nRRULE:..." 这种完整写法，
+    # 并会悄悄用里面的 DTSTART 覆盖起点——起止只能写在 valid 里，所以带冒号 / 换行的一律拒收
+    if ":" in rule or "\n" in rule:
+        raise ValueError(f"rrule 只写重复规则本身（如 FREQ=MONTHLY;BYDAY=-1MO），收到 {rule!r}")
+    try:
+        rrulestr(rule, dtstart=dt.datetime(2000, 1, 1))
+    except (ValueError, TypeError, KeyError) as err:
+        raise ValueError(f"rrule 无法解析：{rule!r}（{err}）") from err
 
 
 class Names(_Strict):

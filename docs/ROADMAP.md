@@ -292,6 +292,7 @@ CLAUDE.md 模板（第 0 阶段原样交给 CC）：
 **你来定**
 - SOP 原文自己写：它就是简历上的「agent spec」
 - B 版的循环上限；UNKNOWN 的站点是保留加警告还是强制替换
+- **之后再做（Aaron 2026-10-10 提出）：**按开放时间自动给整天行程排时间表（圆周旅迹那种）。本阶段先只在 check_day_plan 的问题里给修复建议（改到几点、改到哪天、换哪个），自动排表等核验层稳定、评测有数字之后再做
 
 **交给 CC 的要点**
 - 编排器用 SDK 的 MCP 客户端连本地 server；LLM 调用用 `claude -p --output-format json --json-schema …`（走你的订阅），或 API
@@ -408,8 +409,13 @@ exceptions:                  # 优先级高于基础规则
     closed: true
     reason: 平安夜闭馆
   - id: e2
-    rrule: "FREQ=MONTHLY;BYDAY=-1SU"
+    dates: [2026-12-25, 2026-12-26]   # 连续几天，首尾都算
+    closed: true
+    reason: 圣诞闭馆
+  - id: e3
+    rrule: "FREQ=MONTHLY;BYDAY=-1SU"   # 只写重复规则本身；起止写在 valid 里
     valid: [2026-10-01, 2027-03-31]
+    open: "10:00"
     close: "14:00"
     reason: 每月最后一个周日提前闭馆
 source_url: https://example.org/hours
@@ -425,7 +431,7 @@ is_open(poi, date, at=None):            # at 是景点当地时间；date 由调
   0  status == PERMANENTLY_CLOSED                → CLOSED（PERMANENTLY_CLOSED），rule_ids = ["status"]
      status == TEMP_CLOSED（没写哪天恢复）        → UNKNOWN（TEMP_CLOSED）
   1  没有任何基础规则的有效期覆盖 date             → UNKNOWN（NOT_COVERED）；有效期外的例外也不采信
-  2  命中单日例外（第 1 阶段只做单日；区间 / rrule 留到第 2 阶段，模型直接拒绝这类数据）：
+  2  命中例外（date 单日 / dates 区间 / rrule + valid 重复，三选一；2a 已做）：
        多条且结论不同                             → UNKNOWN（CONFLICT），rule_ids 列出全部
        否则                                       → 用例外的结论（EXCEPTION）
   3  否则取当天星期、且有效期覆盖 date 的基础规则：
@@ -439,7 +445,11 @@ is_open(poi, date, at=None):            # at 是景点当地时间；date 由调
        没有 last_entry 且 at ≥ close              → CLOSED（AFTER_CLOSING）
        规则标了 outside_hours: UNKNOWN 时，上面三种都改成 UNKNOWN（OUTSIDE_KNOWN_HOURS）
      当天是 CLOSED / UNKNOWN：给不给 at 结论都不变
-  （原第 5 步 STALE 取消：有效期最长 90 天，过期直接走第 1 步 UNKNOWN）
+  5  建议与提醒（2a 已做）：
+       结论是 CLOSED 且不是「还没开门」→ 附 next_open_date：之后第一个结论为 OPEN 的日子；
+         UNKNOWN 的日子跳过，找到有效期尽头还没有就不给
+       调用方给了 as_of（景点当地的今天）且 verified_at 距今超过 14 天 → warnings 加 STALE，结论不变
+       （有效期最长仍是 90 天，过期走第 1 步 UNKNOWN；STALE 管的是有效期内「官网可能又改了」）
   所有结论带 rule_ids、source_url、verified_at、代码算出的星期几、reason_code、一句话 reason
 ```
 

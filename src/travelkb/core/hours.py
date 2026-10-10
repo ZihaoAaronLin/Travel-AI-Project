@@ -1,6 +1,7 @@
 """开放判定，按 docs/ROADMAP.md 第 7 节的第 0–4 步。拿不准一律 UNKNOWN，绝不默认 OPEN。
 
-所有日期、时刻都是景点当地的；日期由调用方传入，这里不调用 now()（铁律 3）。
+所有日期、时刻都是景点当地的；日期（包括判断数据是否过期用的「今天」as_of）由调用方传入，
+这里不调用 now()（铁律 3）。
 """
 
 import datetime as dt
@@ -31,6 +32,19 @@ _WEEKDAY_ZH = dict(
     zip(WEEKDAYS, ["周一", "周二", "周三", "周四", "周五", "周六", "周日"], strict=True)
 )
 
+# 核验超过这么多天就提醒「临时调整可能未收录」：11/13 那次官网两天内就新增了例外
+STALE_AFTER_DAYS = 14
+
+# 这些 CLOSED 结论值得建议改天去；BEFORE_OPENING 不在内（当天晚点就能进，看 open 字段就够了）
+_SUGGEST_ANOTHER_DAY = {"EXCEPTION", "WEEKLY_RULE", "AFTER_LAST_ENTRY", "AFTER_CLOSING"}
+
+
+class Caveat(BaseModel):
+    """结论之外的提醒：不改变结论，但模型要转达给用户。"""
+
+    code: Literal["STALE"]
+    message: str
+
 
 class OpenResult(BaseModel):
     """返回给模型的结论。reason_code 给程序判分用，reason 是给模型看的一句话。"""
@@ -48,6 +62,8 @@ class OpenResult(BaseModel):
     last_entry: dt.time | None
     source_url: str | None
     verified_at: dt.date | None
+    next_open_date: dt.date | None  # 去不了时，下一个「确定能去」的日子；没有就是 None
+    warnings: list[Caveat]
 
 
 @dataclass(frozen=True)
@@ -61,12 +77,18 @@ class _Verdict:
     hours: Hours | None = None  # 只有结论是 OPEN（或按时刻判出的 CLOSED / UNKNOWN）时才带时段
 
 
-def is_open(poi: Poi, day: dt.date, at: dt.time | None = None) -> OpenResult:
-    """判断 poi 在当地日期 day 开不开；给了当地时刻 at，就判断那一刻能不能入场。"""
+def is_open(
+    poi: Poi, day: dt.date, at: dt.time | None = None, as_of: dt.date | None = None
+) -> OpenResult:
+    """判断 poi 在当地日期 day 开不开；给了当地时刻 at，就判断那一刻能不能入场。
+
+    as_of 是调用方眼中的「今天」（景点当地日期），只用来判断数据有没有过期；不给就不判断。
+    """
     verdict = _day_verdict(poi, day)
     if at is not None and verdict.status == "OPEN":
         verdict = _entry_at(verdict, at)
 
+    suggest = verdict.status == "CLOSED" and verdict.reason_code in _SUGGEST_ANOTHER_DAY
     hours = verdict.hours
     return OpenResult(
         poi_id=poi.id,
@@ -82,7 +104,33 @@ def is_open(poi: Poi, day: dt.date, at: dt.time | None = None) -> OpenResult:
         last_entry=hours.last_entry if hours else None,
         source_url=poi.source_url,
         verified_at=poi.verified_at,
+        next_open_date=_next_open_date(poi, day) if suggest else None,
+        warnings=_caveats(poi, as_of),
     )
+
+
+def _next_open_date(poi: Poi, day: dt.date) -> dt.date | None:
+    """day 之后第一个结论是 OPEN 的日子。UNKNOWN 的日子跳过（不能把说不准的日子推荐出去），
+    找到数据有效期尽头还没有就放弃——有效期之外的日子我们什么都不知道。"""
+    end = max((rule.valid[1] for rule in poi.rules), default=None)
+    candidate = day + dt.timedelta(days=1)
+    while end is not None and candidate <= end:
+        if _day_verdict(poi, candidate).status == "OPEN":
+            return candidate
+        candidate += dt.timedelta(days=1)
+    return None
+
+
+def _caveats(poi: Poi, as_of: dt.date | None) -> list[Caveat]:
+    if as_of is None or poi.verified_at is None:
+        return []
+    age = (as_of - poi.verified_at).days
+    if age <= STALE_AFTER_DAYS:
+        return []
+    message = (
+        f"数据于 {poi.verified_at} 核验，已过 {age} 天：临时调整可能未收录，出发前请看官网公告"
+    )
+    return [Caveat(code="STALE", message=message)]
 
 
 def _day_verdict(poi: Poi, day: dt.date) -> _Verdict:
@@ -99,8 +147,8 @@ def _day_verdict(poi: Poi, day: dt.date) -> _Verdict:
         reason = "数据没有覆盖这一天（超出有效期或没有官方来源），请以官网为准"
         return _Verdict("UNKNOWN", "NOT_COVERED", reason)
 
-    # 第 2 步：单日例外优先于基础规则
-    exceptions = [exc for exc in poi.exceptions if exc.date == day]
+    # 第 2 步：例外（单日 / 区间 / 按规律重复）优先于基础规则
+    exceptions = [exc for exc in poi.exceptions if exc.covers(day)]
     if exceptions:
         return _combine(exceptions, "EXCEPTION")
 

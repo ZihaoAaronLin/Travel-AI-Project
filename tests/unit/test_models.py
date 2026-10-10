@@ -101,7 +101,7 @@ def test_outside_hours_cannot_be_open(poi_dict):
         Poi.model_validate(poi_dict)
 
 
-# ---- 例外：第 1 阶段只支持单日例外 ----
+# ---- 例外（三种写法的完整测试见 test_exception_kinds.py）----
 
 
 def test_single_day_exception_parses(poi_dict):
@@ -118,8 +118,8 @@ def test_exception_needs_reason(poi_dict):
         Poi.model_validate(poi_dict)
 
 
-def test_rrule_exception_is_rejected_in_stage_1(poi_dict):
-    # 不认识的字段一律报错：否则 rrule 会被静默忽略，那天就会错答成 OPEN
+def test_exception_cannot_mix_date_and_rrule(poi_dict):
+    # 三选一：date 和 rrule 同时写，说不清这条例外到底管哪些天（完整规则见 test_exception_kinds）
     poi_dict["exceptions"] = [
         {
             "id": "e1",
