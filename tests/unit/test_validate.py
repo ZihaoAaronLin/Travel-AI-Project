@@ -131,7 +131,7 @@ def test_conflicting_weekly_rules_are_reported_with_the_first_clash(clean):
     issues = validate_pois([poi])
 
     assert found(issues, "error") == [("error", "RULE_CONFLICT", "demo-museum")]
-    message = issues[0].message
+    message = next(i.message for i in issues if i.code == "RULE_CONFLICT")
     assert "2026-10-06" in message  # 第一个撞车的日子：10 月第一个周二
     assert "r1" in message and "r3" in message
 

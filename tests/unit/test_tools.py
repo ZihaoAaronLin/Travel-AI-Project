@@ -88,10 +88,11 @@ async def test_resolve_poi_lists_every_candidate(client: Client):
 
 
 @pytest.mark.anyio
-async def test_resolve_poi_accepts_city(client: Client):
-    result = await call(client, "resolve_poi", query="纽约示例馆", city="New York")
+async def test_resolve_poi_passes_city_through(client: Client):
+    # 两个「示例馆」都在布达佩斯：限定纽约就应该一个都找不到。工具若丢了 city，这里会变成 AMBIGUOUS
+    result = await call(client, "resolve_poi", query="示例馆", city="New York")
 
-    assert result.structured_content["status"] == "MATCH"
+    assert result.structured_content["status"] == "NOT_FOUND"
 
 
 @pytest.mark.anyio

@@ -91,11 +91,14 @@
 
 - id: g08
   type: exception_changed_hours
-  question: 2026-10-09（周五）11:00 到布达佩斯美术馆，能进吗？
-  call: {tool: is_open, args: {poi_id: museum-of-fine-arts-budapest, date: 2026-10-09, time: "11:00"}}
+  question: 2026-11-13（周五）11:00 到布达佩斯美术馆，能进吗？
+  call: {tool: is_open, args: {poi_id: museum-of-fine-arts-budapest, date: 2026-11-13, time: "11:00"}}
   check: https://www.mfab.hu 弹窗里的 Changed opening hours
-  expect: {status: OPEN}
-  note: Changed opening hours是Friday，13 November，故落在常规时间段10:00-18:00，所以能进
+  expect: {status: CLOSED, weekday: FRI, reason_code: BEFORE_OPENING, open: "12:00"}
+  note: >-
+    Aaron 2026-10-10 定：原题 10-09 已过、官网删了那条没法复核，改成 11-13。
+    官网原文 FRIDAY, 13 NOVEMBER: 12.00 to 20.00 → 12 点才开门，11:00 进不去。
+    （expect 由 CC 按 Aaron 复制的原文填写，待 Aaron 确认）
   source_url: https://www.mfab.hu
   checked_at: 2026-10-10
 

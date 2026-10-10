@@ -4,6 +4,7 @@
 
 - 2026-10-08：Aaron 在本机浏览器从官网复制（前三个站的开放时间在点 Visit 后的弹窗里，没有独立 URL）
 - 2026-09-30：CC 在云端抓取（只有圣史蒂芬大教堂，匈牙利语页；英文页缺关门时间）
+- 2026-10-10：Aaron 复制布达佩斯美术馆新公布的调整（10/08 时页面上还没有）
 
 ---
 
@@ -128,3 +129,14 @@ Hétfő – Vasárnap …………9:00 -18:30
 ```
 
 （Hétfő = 周一，Szombat = 周六，Vasárnap = 周日，Jegykiadás = 售票，templomtere = 教堂大厅，Kincstár = 珍宝馆）
+
+## 2026-10-10 · Aaron 复制（布达佩斯美术馆新公告）
+
+来源：https://www.mfab.hu （弹窗里的 Changed opening hours）
+
+```text
+FRIDAY, 13 NOVEMBER: 12.00 to 20.00. Museum and Slow programme from 17.00; ticket office and entrance until 19.00, closing starts at 19.30
+```
+
+同一天页面上 9 OCTOBER 那条已经删掉（日期已过）。10/08 核验之后两天，官网就新增了一个例外：
+临时调整类信息不能指望 90 天内不变。

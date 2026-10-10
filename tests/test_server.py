@@ -27,6 +27,18 @@ async def test_ping_returns_structured_content(client: Client):
 
 
 @pytest.mark.anyio
+async def test_real_server_loads_data_directory(client: Client):
+    # Claude Desktop 启动的就是这个模块级 server：它必须真的读了 data/pois/，
+    # 否则单元测试（都用假数据）全绿，Desktop 里却什么都查不到
+    result = await client.call_tool("resolve_poi", {"query": "美术馆", "city": "Budapest"})
+
+    assert [c["poi_id"] for c in result.structured_content["candidates"]] == [
+        "hungarian-national-gallery",
+        "museum-of-fine-arts-budapest",
+    ]
+
+
+@pytest.mark.anyio
 async def test_ping_is_read_only(client: Client):
     tools = (await client.list_tools()).tools
     ping = next(t for t in tools if t.name == "ping")

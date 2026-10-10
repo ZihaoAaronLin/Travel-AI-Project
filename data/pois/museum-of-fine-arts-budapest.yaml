@@ -33,5 +33,13 @@ exceptions:
     close: "20:00"
     last_entry: "19:00"
     reason: 调整开放时间（晚场活动）
+  # 原文（Aaron 2026-10-10 复制，10/08 时官网还没有）：FRIDAY, 13 NOVEMBER: 12.00 to 20.00 ...
+  #       ticket office and entrance until 19.00, closing starts at 19.30
+  - id: e2
+    date: 2026-11-13
+    open: "12:00"
+    close: "20:00"
+    last_entry: "19:00"
+    reason: 调整开放时间（晚场活动）
 source_url: https://www.mfab.hu
 verified_at: 2026-10-08
