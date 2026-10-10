@@ -26,6 +26,9 @@ from travelkb.core.hours import Caveat, OpenResult
 from travelkb.core.hours import is_open as judge_opening
 from travelkb.core.loader import load_pois
 from travelkb.core.models import Poi
+from travelkb.core.plan import DayPlanReport, FindOpenResult, PlanIssue, PlanWarning, Stop
+from travelkb.core.plan import check_day_plan as check_plan
+from travelkb.core.plan import find_open_pois as find_open
 from travelkb.core.resolve import ResolveResult
 from travelkb.core.resolve import resolve_poi as resolve_name
 
@@ -78,6 +81,60 @@ class IsOpenOutput(BaseModel):
         description="去不了时，下一个确定能去的日子 YYYY-MM-DD；可以据此建议改天"
     )
     warnings: list[Caveat] = Field(description="结论之外的提醒，要转达给用户（如数据可能过期）")
+
+
+class StopInput(BaseModel):
+    poi_id: str = Field(description="resolve_poi 返回的 poi_id")
+    arrive: str = Field(description="到达时刻 HH:MM（景点当地时间）")
+    leave: str | None = Field(default=None, description="离开时刻 HH:MM；不填只核验到达")
+
+
+class StopOutput(BaseModel):
+    index: int
+    poi_id: str
+    name_zh: str
+    arrive: str
+    leave: str | None
+    status: Literal["OPEN", "CLOSED", "UNKNOWN"]
+    reason_code: str
+    reason: str
+    open: str | None
+    close: str | None
+    last_entry: str | None
+    next_open_date: str | None
+    source_url: str | None
+    verified_at: str | None
+
+
+class DayPlanOutput(BaseModel):
+    date: str
+    weekday: str
+    ok: bool = Field(description="没有 BLOCKER 也没有 UNKNOWN 才为 true；WARNING 不影响")
+    stops: list[StopOutput]
+    issues: list[PlanIssue] = Field(description="逐条解决：按 fix 和 suggestion 改，改完再调一次")
+    counts: dict[str, int]
+    warnings: list[PlanWarning]
+
+
+class OpenHitOutput(BaseModel):
+    poi_id: str
+    name_zh: str
+    name_en: str
+    category: str
+    open: str | None
+    close: str | None
+    last_entry: str | None
+    source_url: str | None
+    verified_at: str | None
+
+
+class FindOpenOutput(BaseModel):
+    date: str
+    weekday: str
+    open: list[OpenHitOutput] = Field(
+        description="确定开放的景点，按 poi_id 排序，顺序不代表推荐度"
+    )
+    unverified: list[str] = Field(description="无法核验的 poi_id：不是没有，是数据说不准")
 
 
 def build_server(pois: Sequence[Poi], clock: Clock = utc_now) -> MCPServer:
@@ -154,6 +211,74 @@ def build_server(pois: Sequence[Poi], clock: Clock = utc_now) -> MCPServer:
         logger.info("is_open %s %s %s -> %s", poi_id, day, time, result.status)
         return _to_output(result, date_source)
 
+    @mcp.tool(annotations=READ_ONLY)
+    def check_day_plan(
+        stops: Annotated[list[StopInput], Field(description="按到达顺序排的站点，至少一站")],
+        date: Annotated[
+            str | None, Field(description="行程日期 YYYY-MM-DD（当地）；不填用第一站景点当地的今天")
+        ] = None,
+    ) -> DayPlanOutput:
+        """核验一天的行程：逐站判断去不去得了，把问题列成清单，每条带修复建议。
+
+        用法：每个站点的 poi_id 必须先用 resolve_poi 拿到。拿到结果后按 issues 逐条改：
+        - BLOCKER 必须改（当天闭馆、晚于最后入场、两站时间重叠）
+        - WARNING 提醒用户（到早了要等、待到关门之后、两站之间不足 10 分钟）
+        - UNKNOWN 无法核验（数据没覆盖），要告诉用户「未核验，请以官网为准」，不能当成没问题
+        当天闭馆的站点用 find_open_pois 换一个当天开放的。改完再调一次，直到 ok 为 true。
+
+        不算路上时间：两站之间只要求至少 10 分钟缓冲，路上要多久由你另外估算。
+        """
+        if not stops:
+            raise ToolError("stops 至少要有一站")
+        first = by_id.get(stops[0].poi_id)
+        if first is None:
+            raise ToolError(f"未知 poi_id {stops[0].poi_id!r}：先调 resolve_poi 拿到 poi_id")
+        today = _local_today(first, clock)
+        day = today if date is None else _parse_date(date)
+        try:
+            plan = [
+                Stop(
+                    poi_id=s.poi_id,
+                    arrive=_parse_time(s.arrive),
+                    leave=None if s.leave is None else _parse_time(s.leave),
+                )
+                for s in stops
+            ]
+            report = check_plan(pois, day, plan, as_of=today)
+        except ValueError as err:
+            raise ToolError(str(err)) from err
+        logger.info(
+            "check_day_plan %s %d stops -> ok=%s %s", day, len(plan), report.ok, report.counts
+        )
+        return _plan_output(report)
+
+    @mcp.tool(annotations=READ_ONLY)
+    def find_open_pois(
+        city: Annotated[str, Field(description="城市英文名，如 Budapest")],
+        date: Annotated[
+            str | None, Field(description="日期 YYYY-MM-DD（当地）；不填用该城市的今天")
+        ] = None,
+        time: Annotated[
+            str | None, Field(description="时刻 HH:MM；填了就只列那一刻还能入场的")
+        ] = None,
+        category: Annotated[str | None, Field(description="类别，如 museum；不填不限")] = None,
+    ) -> FindOpenOutput:
+        """找某城某天确定开放的景点，用来替换行程里闭馆的站点。
+
+        open 里只有结论为 OPEN 的；unverified 里是数据说不准的景点——不要把它们当成闭馆，
+        也不要推荐它们，告诉用户「未核验」即可。知识库没收录的景点不会出现在任何一栏。
+        """
+        in_city = [p for p in pois if p.city.casefold() == city.strip().casefold()]
+        today = _local_today(in_city[0], clock) if in_city else clock().date()
+        day = today if date is None else _parse_date(date)
+        at = None if time is None else _parse_time(time)
+        try:
+            result = find_open(pois, city, day, at, category)
+        except ValueError as err:
+            raise ToolError(str(err)) from err
+        logger.info("find_open_pois %s %s %s -> %d open", city, day, time, len(result.open))
+        return _find_output(result)
+
     return mcp
 
 
@@ -200,6 +325,68 @@ def _to_output(result: OpenResult, date_source: str) -> IsOpenOutput:
         verified_at=result.verified_at.isoformat() if result.verified_at else None,
         next_open_date=result.next_open_date.isoformat() if result.next_open_date else None,
         warnings=result.warnings,
+    )
+
+
+def _hhmm(value: dt.time | None) -> str | None:
+    return value.strftime("%H:%M") if value else None
+
+
+def _iso(value: dt.date | None) -> str | None:
+    return value.isoformat() if value else None
+
+
+def _plan_output(report: DayPlanReport) -> DayPlanOutput:
+    stops = [
+        StopOutput(
+            index=s.index,
+            poi_id=s.poi_id,
+            name_zh=s.name_zh,
+            arrive=_hhmm(s.arrive),
+            leave=_hhmm(s.leave),
+            status=s.status,
+            reason_code=s.reason_code,
+            reason=s.reason,
+            open=_hhmm(s.open),
+            close=_hhmm(s.close),
+            last_entry=_hhmm(s.last_entry),
+            next_open_date=_iso(s.next_open_date),
+            source_url=s.source_url,
+            verified_at=_iso(s.verified_at),
+        )
+        for s in report.stops
+    ]
+    return DayPlanOutput(
+        date=report.date.isoformat(),
+        weekday=report.weekday,
+        ok=report.ok,
+        stops=stops,
+        issues=report.issues,
+        counts=report.counts,
+        warnings=report.warnings,
+    )
+
+
+def _find_output(result: FindOpenResult) -> FindOpenOutput:
+    hits = [
+        OpenHitOutput(
+            poi_id=h.poi_id,
+            name_zh=h.name_zh,
+            name_en=h.name_en,
+            category=h.category,
+            open=_hhmm(h.open),
+            close=_hhmm(h.close),
+            last_entry=_hhmm(h.last_entry),
+            source_url=h.source_url,
+            verified_at=_iso(h.verified_at),
+        )
+        for h in result.open
+    ]
+    return FindOpenOutput(
+        date=result.date.isoformat(),
+        weekday=result.weekday,
+        open=hits,
+        unverified=result.unverified,
     )
 
 

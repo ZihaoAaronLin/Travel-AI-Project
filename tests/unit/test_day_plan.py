@@ -110,6 +110,22 @@ def test_stops_out_of_order_count_as_overlap(pois):
 # ---- WARNING：提醒，不算失败 ----
 
 
+def test_less_than_ten_minutes_between_stops_is_a_warning(pois):
+    # Aaron 2026-10-10：不算路上时间，但两站之间至少留 10 分钟缓冲；刚好 10 分钟不算
+    tight = check_day_plan(
+        pois, TUE, [stop("demo-museum", "10:30", "13:00"), stop("demo-twin", "13:05", "15:00")]
+    )
+    exact = check_day_plan(
+        pois, TUE, [stop("demo-museum", "10:30", "13:00"), stop("demo-twin", "13:10", "15:00")]
+    )
+
+    assert tight.ok is True
+    assert issue_codes(tight) == [("WARNING", "TIGHT_TRANSFER", 1)]
+    assert tight.issues[0].fix == "ARRIVE_LATER"
+    assert "13:10" in tight.issues[0].suggestion
+    assert exact.issues == []
+
+
 def test_arriving_before_opening_is_a_warning(pois):
     report = check_day_plan(pois, TUE, [stop("demo-museum", "09:30", "12:00")])
 

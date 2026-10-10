@@ -194,7 +194,7 @@ CLAUDE.md 模板（第 0 阶段原样交给 CC）：
 
 **2026-10-10 Aaron 定的顺序**（先做产品核心，再做对照实验；每步都能单独演示）：
 - 2a 引擎补全：例外三选一写法（date / dates / rrule + valid）；去不了时给 next_open_date；核验超过 14 天加 STALE 提醒（结论不变）
-- 2b check_day_plan + find_open_pois：问题逐条带修复建议（改时间 / 改到 next_open_date / 换替代），模型逐一修完再验，直到没有 BLOCKER
+- 2b check_day_plan + find_open_pois：问题逐条带修复建议（改时间 / 改到 next_open_date / 换替代），模型逐一修完再验，直到没有 BLOCKER。不算路上时间，但两站之间至少留 10 分钟缓冲（Aaron 2026-10-10）；级别表和 fix 取值见 tests/unit/test_day_plan.py
 - 2c 数据扩到约 20 个景点 + 15 条金标准（Aaron；同名撞车组的金标准一并补）
 - 2d 题库 30 题 + 评测脚本，跑 A0、A6 基线
 - 2e query_kb + build_db（只服务 A2，时间紧就砍）
@@ -220,7 +220,7 @@ CLAUDE.md 模板（第 0 阶段原样交给 CC）：
 - scripts/build_db.py：YAML → build/travelkb.sqlite，运行时只读打开（从第 1 阶段推迟到这里，query_kb 要用）
 - 引擎按第 7 节全部实现；同一天两条规则结论相反 → UNKNOWN，校验脚本同时报错
 - validate_data.py：每条规则有 source_url 和 verified_at；逐日枚举有效期查冲突；列出别名撞车（每组撞车都要有对应金标准）；RRULE 能解析；时区合法；时间字段是字符串
-- check_day_plan：闭馆、到早了、晚于最后入场、预约没提前到、站点时间重叠。**不算路上时间**，工具描述里写明
+- check_day_plan：闭馆、到早了、晚于最后入场、站点时间重叠、衔接不足 10 分钟（预约没提前到推迟到第 4 阶段）。**不算路上时间**，工具描述里写明
 - query_kb（环境变量 `TRAVELKB_ENABLE_SQL=1` 才注册），多层防护：
   1. `sqlite3.connect("file:…?mode=ro", uri=True)` 只读打开（实测 DROP / UPDATE 报 attempt to write a readonly database）
   2. `PRAGMA query_only = ON`

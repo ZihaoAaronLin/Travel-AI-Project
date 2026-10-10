@@ -22,24 +22,28 @@
 - ROADMAP 第 7 节：第 2 步改成三选一；新增第 5 步（建议与提醒）；YAML 示例补 dates 写法、修了原示例里只写 close 没写 open 的错；第 5 阶段记下 Aaron 的「自动排时间表」想法（之后再做）
 - 真实数据演示：农业博物馆 2026-12-24（例外闭馆）→ next_open_date 2026-12-27
 
-### 2b 测试（红，等 Aaron 审）
-- tests/unit/test_day_plan.py（16）：check_day_plan(pois, day, stops, as_of=None)
-  - 输入：Stop(poi_id, arrive, leave=None)，按到达顺序给；不算路上时间
-  - 输出 DayPlanReport：ok、date、weekday、stops[逐站结论]、issues[问题]、counts、warnings[STALE，每个景点只报一次]
-  - 问题：id（I1、I2…按站点顺序）、severity、code、stop_index、related_stop_index（重叠时指向上一站）、fix（机器可读）、suggestion（给模型，含具体数值）
-  - 级别表：CLOSED_DAY / AFTER_LAST_ENTRY / OVERLAP → BLOCKER；BEFORE_OPENING / LEAVE_AFTER_CLOSE → WARNING；UNVERIFIED → UNKNOWN
-  - ok = 没有 BLOCKER 也没有 UNKNOWN（WARNING 不影响通过）
-  - fix 取值：CHANGE_DATE、ARRIVE_EARLIER、ARRIVE_LATER、LEAVE_EARLIER、CHECK_OFFICIAL（REPLACE_POI 作为 CLOSED_DAY 建议里的第二选项写在 suggestion 里）
-  - 「修完再验就通过」有专门一条测试，对应 Aaron 要的「逐一解决」
-- tests/unit/test_find_open.py（6）：find_open_pois(pois, city, day, at=None, category=None) → open[]（只列结论 OPEN 的，按 id 排）+ unverified[]（说不准的单独列，让模型知道不是没有而是没法核验）
-- tests/unit/test_tools_day_plan.py（7）：两个工具注册且只读；描述里写明不算路上时间、先 resolve、闭馆用 find_open_pois 换；stops 用 [{poi_id, arrive, leave?}] 传；不给日期用景点当地今天；坏 poi_id / 坏时刻以 is_error 告诉模型
-- 现状：3 个文件因 travelkb.core.plan 不存在而收集失败（预期的红）；其余 159 条照常通过
+### 2b 已实现（Aaron 放行；新增 10 分钟缓冲要求 → 加了一条测试，其余 tests/ 未动）
+- 全部 189 条测试通过；真实数据 validate_data 仍是 error 0、warning 0
+- core/plan.py：check_day_plan（Stop / PlanIssue / StopVerdict / DayPlanReport）、find_open_pois（OpenHit / FindOpenResult）
+  - 两站衔接：到达早于上一站离开 → BLOCKER OVERLAP；没重叠但不足 10 分钟 → WARNING TIGHT_TRANSFER（TRANSFER_BUFFER = 10 分钟）；建议都是「上一站离开 + 10 分钟后到达」
+  - 实现时踩的坑：is_open 结论为 OPEN 时 reason_code 也是 WEEKLY_RULE（说明依据），判「整天闭馆」必须先看 status；写错后 7 条测试立刻红了——测试抓住了
+- server.py：工具 check_day_plan（stops: [{poi_id, arrive, leave?}], date?）、find_open_pois（city, date?, time?, category?）；不给日期用第一站 / 该城市景点当地的今天；坏输入一律 ToolError
+- 容器里按 Claude Desktop 方式（真实 stdio、真实数据）跑通 ROADMAP 的第 2 阶段验收场景：
+  周一（2026-10-12）布达佩斯美术馆 10:00 + 大教堂 12:35 + 渔人堡 20:00
+  → I1 BLOCKER CLOSED_DAY（改到 10-13 或换）、I2 WARNING TIGHT_TRANSFER（只留 5 分钟）、I3 UNKNOWN UNVERIFIED（收费时段外）
+  → find_open_pois 周一 10:00：6 个开放、2 个 unverified → 换掉第一站、拉开间隔、渔人堡改 15:00 → ok=True
+- ROADMAP 2b 行、check_day_plan 要点已补 10 分钟缓冲
+
+### Desktop 验收脚本（第 2 阶段）
+1. git pull；⌘Q 完全退出再打开 Claude Desktop（新工具要重启才加载）；工具菜单里 travelkb 应有 5 个工具
+2. 在 travel-kb Project 里问：「10 月 12 日（周一）在布达佩斯排一天：上午美术馆，中午圣史蒂芬大教堂，晚上 8 点渔人堡」
+3. 看模型会不会：先 resolve_poi 逐站消歧（美术馆、渔人堡都会 AMBIGUOUS，要追问）→ check_day_plan → 把 BLOCKER 换掉（find_open_pois）→ 再调一次 check_day_plan → 最终回答带 source_url，渔人堡那站说「未核验」
+4. 截图；没按预期走的地方记下来（跳过工具 / 没照结果说 / 把 UNKNOWN 当成开放）
 
 ### 下一步
-1. Aaron：审 2b 测试（重点：级别表、fix 取值、ok 的定义、OVERLAP 的判法）
-2. CC：审过后实现 core/plan.py + server 两个工具
-2. Aaron：Desktop 验收结果；2c 的新景点（官网原文）可以开始挑
-3. 之后 2d 题库 + 评测脚本，2e query_kb
+1. Aaron：第 1、2 阶段的 Desktop 验收结果；开始挑 2c 的新景点（官网原文）
+2. CC：2d 评测脚本的测试 / 设计（题库格式、`claude -p` 跑法、判分）给 Aaron 审；2e query_kb 放最后
+3. SOP（Project 指令）要加一段 check_day_plan 的用法：排整天行程时先 resolve 每站，再 check_day_plan，按 issues 逐条改，改完再验
 
 ## 2026-10-10（晚）· MCP 工具上线 + 数据校验
 
