@@ -1,5 +1,33 @@
 # HANDOFF
 
+## 2026-10-10（晚）· MCP 工具上线 + 数据校验
+
+### 做了什么
+- 数据：布达佩斯美术馆补 11/13 调整（e2，Aaron 10/10 复制原文，已存进 data/sources/）
+- 金标准：g08 改成 2026-11-13（原题 10/09 已过、官网删了没法复核）；expect 由 CC 按 Aaron 复制的原文填，**待 Aaron 确认**；10/10 全过
+- 替 Aaron 审了上一批测试，实现前先修了 3 处（单独提交 c7a13e2，之后 tests/ 没再动）：
+  1. city 测试太弱：「纽约示例馆」本来就唯一，工具丢了 city 也会过 → 改成限定纽约查「示例馆」应 NOT_FOUND
+  2. 缺真实接线测试：单元测试全用假数据，模块级 server 不读 data/pois 也全绿 → test_server 加一条真实 server 查「美术馆」
+  3. 冲突测试靠 issues[0] 碰巧取对 → 改成按 code 找
+- 实现：
+  - server.py：build_server(pois, clock)；工具 resolve_poi / is_open（只读）；不给日期按景点时区算今天；坏参数、未知 poi_id 用 ToolError 告诉模型；结果日期 YYYY-MM-DD、时刻 HH:MM；模块级 mcp 启动时读 data/pois/
+  - core/validate.py + scripts/validate_data.py：真实数据 error 0、warning 0、info 13
+  - 「两条规则结论是否相同」统一成 Hours.verdict_key()，引擎和校验共用
+- 全部 123 条测试通过；容器里按 Claude Desktop 的方式（uv --directory、从 / 启动、真实 stdio）调通三个工具
+- CLAUDE.md 常用命令：去掉 build_db.py（推迟到第 2 阶段）
+
+### 第 1 阶段验收还差（都在 Aaron 那边）
+1. git pull 后完全退出再打开 Claude Desktop（server 代码变了，要重启才会加载新工具）
+2. Desktop 里问「下周一去布达佩斯美术馆」：模型应先调 resolve_poi，拿到 AMBIGUOUS 后问你是哪一家；截图留给 README
+3. Inspector：「美术馆」+ Budapest → AMBIGUOUS；闭馆日 → CLOSED 带 source_url；窗外日期 → UNKNOWN
+4. Claude Desktop 的 Project 指令里写最简 SOP（A 版起点）：先 resolve_poi 再 is_open；AMBIGUOUS 就问；UNKNOWN 就说不确定并给官网链接
+5. 确认 g08 的 expect
+
+### 已知问题 / 之后
+- 同名撞车 4 组（渔人堡、沃伊达奇城堡、大教堂、美术馆），只有「美术馆」有金标准；ROADMAP 要求每组都有，第 2 阶段补
+- 11/13 这件事说明 90 天有效期对「临时调整」太长：第 2 阶段设计复核策略
+- 日志配置依赖 SDK 的 configure_logging（见下方更早的记录）
+
 ## 2026-10-10 · 金标准第一轮
 
 ### 做了什么

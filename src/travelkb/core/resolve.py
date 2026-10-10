@@ -42,7 +42,7 @@ def resolve_poi(query: str, pois: Sequence[Poi], city: str | None = None) -> Res
     if not key:
         raise ValueError("query 不能为空")
 
-    matches = [poi for poi in pois if key in _match_keys(poi)]
+    matches = [poi for poi in pois if key in match_keys(poi)]
     if city and city.strip():
         matches = [poi for poi in matches if normalize(poi.city) == normalize(city)]
     matches.sort(key=lambda poi: poi.id)
@@ -55,7 +55,7 @@ def resolve_poi(query: str, pois: Sequence[Poi], city: str | None = None) -> Res
     )
 
 
-def _match_keys(poi: Poi) -> set[str]:
+def match_keys(poi: Poi) -> set[str]:
     """一个景点能被叫出的所有名字（三种语言的正式名 + 别名），统一写法后的集合。"""
     names = [poi.names.local, poi.names.en, poi.names.zh, *poi.aliases]
     return {normalize(name) for name in names if name}

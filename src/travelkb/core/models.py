@@ -45,6 +45,10 @@ class Hours(_Strict):
         hour, minute = value.split(":")
         return dt.time(int(hour), int(minute))
 
+    def verdict_key(self) -> tuple:
+        """这条规则 / 例外的「结论指纹」：两条指纹相同才算结论一致。不含 id、有效期等元信息。"""
+        return (self.closed, self.open, self.close, self.last_entry, self.outside_hours)
+
     @model_validator(mode="after")
     def _closed_or_full_hours(self) -> Self:
         has_hours = any(t is not None for t in (self.open, self.close, self.last_entry))

@@ -116,7 +116,7 @@ def _day_verdict(poi: Poi, day: dt.date) -> _Verdict:
 def _combine(entries: Sequence[Rule | DayException], code: ReasonCode) -> _Verdict:
     """同一天命中多条规则（或多条例外）：结论一致就采用，不一致说明数据自相矛盾，只能答 UNKNOWN。"""
     ids = [entry.id for entry in entries]
-    if len({_conclusion(entry) for entry in entries}) > 1:
+    if len({entry.verdict_key() for entry in entries}) > 1:
         return _Verdict("UNKNOWN", "CONFLICT", f"数据自相矛盾：{'、'.join(ids)} 的结论不同", ids)
 
     first = entries[0]
@@ -124,11 +124,6 @@ def _combine(entries: Sequence[Rule | DayException], code: ReasonCode) -> _Verdi
     if first.closed:
         return _Verdict("CLOSED", code, f"{note}当天闭馆", ids)
     return _Verdict("OPEN", code, f"{note}当天开放 {_hours_text(first)}", ids, hours=first)
-
-
-def _conclusion(entry: Hours) -> tuple:
-    """用来比较两条规则结论是否相同的「指纹」，不含 id、有效期等元信息。"""
-    return (entry.closed, entry.open, entry.close, entry.last_entry, entry.outside_hours)
 
 
 def _entry_at(verdict: _Verdict, at: dt.time) -> _Verdict:
