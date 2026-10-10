@@ -40,9 +40,16 @@
 3. 看模型会不会：先 resolve_poi 逐站消歧（美术馆、渔人堡都会 AMBIGUOUS，要追问）→ check_day_plan → 把 BLOCKER 换掉（find_open_pois）→ 再调一次 check_day_plan → 最终回答带 source_url，渔人堡那站说「未核验」
 4. 截图；没按预期走的地方记下来（跳过工具 / 没照结果说 / 把 UNKNOWN 当成开放）
 
+### 2d 评测设计（待 Aaron 审）
+- eval/DESIGN.md：三组起步（A0 裸模型、A6 联网搜索、A3 本项目工具 + SOP；A4 顺手）；题库格式；`claude -p` 的完整命令（flag 按 CLI 文档核对：`--tools ""` 不影响 MCP 工具，所以 A0 要再加 `--disallowedTools "mcp__*"`；`--permission-prompts none` 下要用的工具必须预先 `--allowedTools`）；VERDICT 行格式；规则判分矩阵（答错 / 答对 / 该弃的弃了 / 不该弃也弃了 / no_verdict / harness_error 分开记）；McNemar + Wilson；预注册
+- eval/questions.yaml：q01–q10 从 golden 搬入（gold_archive 待补），q11–q30 按题型留空
+- 对照了 Anthropic 的评测健康清单：状态隔离（每次空目录新进程）、基础设施错误不混进模型成绩、「没答」≠「答错」、两个方向都覆盖、每题只考一件事、轨迹全存、烟雾测试（gold 全对 / 空输出全 no_verdict）
+- 待 Aaron 定 6 件事（DESIGN.md 第 8 节）：跑哪几组、模型、reps、订阅还是 API key、轨迹进不进 git、today 的定法
+
 ### 下一步
-1. Aaron：第 1、2 阶段的 Desktop 验收结果；开始挑 2c 的新景点（官网原文）
-2. CC：2d 评测脚本的测试 / 设计（题库格式、`claude -p` 跑法、判分）给 Aaron 审；2e query_kb 放最后
+1. Aaron：审 eval/DESIGN.md，答第 8 节 6 个问题；第 1、2 阶段的 Desktop 验收结果；2c 新景点
+2. CC：设计定稿后写 run.py / score.py 的测试（假 runner，不花钱）给 Aaron 审 → 实现
+3. Aaron：填 q11–q30 + Wayback 存档；写 eval/PREREG.md；先跑 3 题读轨迹，再全量
 3. SOP（Project 指令）要加一段 check_day_plan 的用法：排整天行程时先 resolve 每站，再 check_day_plan，按 issues 逐条改，改完再验
 
 ## 2026-10-10（晚）· MCP 工具上线 + 数据校验

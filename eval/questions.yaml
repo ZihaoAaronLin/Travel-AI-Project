@@ -1,0 +1,142 @@
+# 评测题库。格式和填法见 eval/DESIGN.md 第 2 节。
+#
+# gold.verdict 四选一：OPEN / CLOSED / UNKNOWN / AMBIGUOUS
+#   UNKNOWN   = 不该给确定答案（库外、超出核验窗口、官网没写的时段）
+#   AMBIGUOUS = 该先问是哪一个（城内同名）
+# 金标准独立于 data/：回官网核对，存 Wayback 链接（gold_archive）。
+# q01–q10 从 tests/golden/cases.yaml 搬来（Aaron 2026-10-10 已核对），gold_archive 待补；
+# q11–q30 留空位，question 为 null 的题 runner 会跳过。
+# 问法要像真人，日期用 today 钉死；所有日期落在核验窗口 2026-10-08 ~ 2027-01-06 内。
+
+- id: q01
+  type: open_day
+  question: 10 月 13 日（周二）去布达佩斯美术馆，开门吗？几点到几点？
+  today: 2026-10-10
+  gold: {verdict: OPEN, facts: 周二 10:00–18:00，17:00 最后入场}
+  in_kb: true
+  expected_tools: [resolve_poi, is_open]
+  gold_sources: [https://www.mfab.hu]
+  gold_archive: null
+  gold_checked_at: 2026-10-10
+
+- id: q02
+  type: weekly_closed
+  question: 下周一想去布达佩斯美术馆，开门吗？
+  today: 2026-10-10
+  gold: {verdict: CLOSED, facts: 周一闭馆（10-12 是周一）}
+  in_kb: true
+  expected_tools: [resolve_poi, is_open]
+  gold_sources: [https://www.mfab.hu]
+  gold_archive: null
+  gold_checked_at: 2026-10-10
+
+- id: q03
+  type: out_of_window
+  question: 明年 1 月 12 日去圣史蒂芬大教堂的教堂大厅，开门吗？
+  today: 2026-10-10
+  gold: {verdict: UNKNOWN, facts: 超出核验窗口（2027-01-06 之后），数据不覆盖}
+  in_kb: true
+  expected_tools: [resolve_poi, is_open]
+  gold_sources: [https://bazilikabudapest.hu/nyitvatartas/]
+  gold_archive: null
+  gold_checked_at: 2026-10-10
+
+- id: q04
+  type: same_name_in_city
+  question: 下周去布达佩斯的美术馆，哪天开门？
+  today: 2026-10-10
+  gold: {verdict: AMBIGUOUS, facts: 国家美术馆和布达佩斯美术馆都叫美术馆，要先问}
+  in_kb: true
+  expected_tools: [resolve_poi]
+  gold_sources: [https://en.mng.hu, https://www.mfab.hu]
+  gold_archive: null
+  gold_checked_at: 2026-10-10
+
+- id: q05
+  type: not_in_kb
+  question: 盖勒特温泉几点开门？
+  today: 2026-10-10
+  gold: {verdict: UNKNOWN, facts: 知识库未收录，不能凭印象给时间}
+  in_kb: false
+  expected_tools: [resolve_poi]
+  gold_sources: [https://www.gellertbath.hu/]
+  gold_archive: null
+  gold_checked_at: 2026-10-10
+
+- id: q06
+  type: after_last_entry
+  question: 10 月 14 日下午五点半到匈牙利国家美术馆，还能进吗？
+  today: 2026-10-10
+  gold: {verdict: CLOSED, facts: 最后入场 17:00}
+  in_kb: true
+  expected_tools: [resolve_poi, is_open]
+  gold_sources: [https://en.mng.hu]
+  gold_archive: null
+  gold_checked_at: 2026-10-10
+
+- id: q07
+  type: exception_closed
+  question: 11 月 1 日（周日）去沃伊达奇城堡里的农业博物馆，开门吗？
+  today: 2026-10-10
+  gold: {verdict: CLOSED, facts: 11 月 1 日节假日闭馆（官网 Public Holidays）}
+  in_kb: true
+  expected_tools: [resolve_poi, is_open]
+  gold_sources: [https://www.mezogazdasagimuzeum.hu/information/opening-hours]
+  gold_archive: null
+  gold_checked_at: 2026-10-10
+
+- id: q08
+  type: exception_changed_hours
+  question: 11 月 13 日（周五）上午 11 点到布达佩斯美术馆，能进吗？
+  today: 2026-10-10
+  gold: {verdict: CLOSED, facts: 那天 12:00 才开门（官网 Changed opening hours）}
+  in_kb: true
+  expected_tools: [resolve_poi, is_open]
+  gold_sources: [https://www.mfab.hu]
+  gold_archive: null
+  gold_checked_at: 2026-10-10
+
+- id: q09
+  type: outside_known_hours
+  question: 10 月 15 日晚上八点半去渔人堡的收费观景台，能上去吗？
+  today: 2026-10-10
+  gold: {verdict: UNKNOWN, facts: 官网只写了 09:00–19:00 收费时段，时段外没写}
+  in_kb: true
+  expected_tools: [resolve_poi, is_open]
+  gold_sources: [https://ticket.budavar.hu/en]
+  gold_archive: null
+  gold_checked_at: 2026-10-10
+
+- id: q10
+  type: season_boundary
+  question: 11 月 2 日（周一）下午五点到国会大厦，还开着吗？
+  today: 2026-10-10
+  gold: {verdict: CLOSED, facts: 11 月起 16:00 关门}
+  in_kb: true
+  expected_tools: [resolve_poi, is_open]
+  gold_sources: [https://www.parlament.hu/web/visitors/opening-hours]
+  gold_archive: null
+  gold_checked_at: 2026-10-10
+
+# ---- 以下由 Aaron 填（题型配比见 DESIGN.md 第 2 节）----
+
+- {id: q11, type: open_day, question: null}
+- {id: q12, type: open_day, question: null}
+- {id: q13, type: open_day, question: null}
+- {id: q14, type: open_day, question: null}
+- {id: q15, type: open_day, question: null}
+- {id: q16, type: weekly_closed, question: null}
+- {id: q17, type: weekly_closed, question: null}
+- {id: q18, type: season_boundary, question: null}
+- {id: q19, type: season_boundary, question: null}
+- {id: q20, type: season_boundary, question: null}
+- {id: q21, type: monthly_rule, question: null}
+- {id: q22, type: monthly_rule, question: null}
+- {id: q23, type: exception_closed, question: null}
+- {id: q24, type: exception_closed, question: null}
+- {id: q25, type: exception_closed, question: null}
+- {id: q26, type: before_opening, question: null}
+- {id: q27, type: after_last_entry, question: null}
+- {id: q28, type: same_name_in_city, question: null}
+- {id: q29, type: same_name_in_city, question: null}
+- {id: q30, type: not_in_kb, question: null}
