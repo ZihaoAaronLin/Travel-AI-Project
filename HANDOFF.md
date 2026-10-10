@@ -6,21 +6,21 @@
 - Inspector 5 条全对（Aaron 2026-10-10）
 - Claude Desktop 验收（同名追问、无 SOP / 有 SOP 各问一遍）：Aaron 稍后发截图和清单
 
-### 第 2 阶段计划（草案，Aaron 确认后同步进 ROADMAP）
-按「先做产品核心、再做对照实验」排序，每一步都能单独演示：
-- 2a 引擎补全（假数据单测，不依赖新数据）：区间例外 `dates: [起, 止]`、RRULE 例外 `rrule:` + `valid:`；validate_data 加 RRULE 能解析、每组同名撞车都有金标准
-- 2b check_day_plan + find_open_pois：「行程核验」的产品核心。逐站结论 + 问题清单（BLOCKER / WARNING / UNKNOWN），不算路上时间
-- 2c 数据扩到约 20 个景点（Aaron，现在就可以并行开始）+ 再写 15 条金标准
-- 2d 题库 30 题 + 评测脚本，跑 A0（裸模型）和 A6（模型 + 联网搜索）基线
-- 2e query_kb + build_db（SQLite + 七层防护）：只服务对照组 A2，不在最低可交付里，放最后，时间紧就砍
+### 第 2 阶段计划（Aaron 已确认，已同步进 ROADMAP 第 2 阶段）
+- 顺序 2a → 2b → 2c → 2d → 2e；arrive_early_min 推迟到第 4 阶段；STALE 阈值 14 天
+- CC 对两条要求的理解（Aaron 审测试时确认）：
+  - 「例外之后给出相关建议」→ 结论 CLOSED 时附 next_open_date（下一个确定能去的日子）
+  - 「check_day_plan 的问题能逐一解决」→ 每个问题带编号、站点、修复建议，模型逐条修完再验（2b 的测试里体现）
+- 同名撞车组的金标准：Aaron 说先不补，放到 2c
 
-### 待 Aaron 定（CC 的建议在括号里）
-1. 上面的顺序（建议照此）
-2. check_day_plan 严重级别（见对话里的表）
-3. 例外的 YAML 写法：date / dates / rrule 三选一（建议照此）
-4. 预约须提前到（arrive_early_min）：布达佩斯没有真实例子（建议推迟到第 4 阶段米兰）
-5. 过期提示：核验后超过 N 天，结论不变但加 STALE 警告「临时调整可能未收录，出发前看官网公告」（11/13 的教训；建议 N = 14）
-6. 新景点清单：覆盖真实的区间闭馆、每月循环、窗口内换季、永久停业，再加至少 2 组同名
+### 2a 测试（红，等 Aaron 审）
+- tests/unit/test_exception_kinds.py：date / dates / rrule 三选一；8 种写错要拒收（含 rrule 里夹 DTSTART——dateutil 会悄悄用它覆盖起点）；区间、每月最后一个周一、rrule 只在自己的 valid 内生效、不同写法撞在同一天算冲突
+- tests/unit/test_suggestions.py：next_open_date（跳过连续闭馆日、绝不推荐 UNKNOWN 的日子、窗口外不推荐、还没开门/开着/UNKNOWN/永久停业时不给）；STALE（不给 as_of 不判断、第 14 天不算、第 15 天提醒且结论不变）
+- tests/unit/test_validate_exceptions.py：区间 / rrule 覆盖到有效期外 → error；不同写法撞同一天且结论不同 → error
+- tests/unit/test_tools_suggestions.py：工具输出 next_open_date、warnings；过期按景点当地日期判断（UTC 还是第 14 天、布达佩斯已是第 15 天）
+- 现状：28 条红（未实现），8 条「写错要拒收」已经绿（现有模型本来就拒收不认识的字段）；原有 131 条照常通过
+- 测试定下的接口：is_open(poi, day, at=None, as_of=None)；OpenResult 新增 next_open_date、warnings[{code, message}]；DayException 新增 dates、rrule、valid
+- 旧测试 test_models.py::test_rrule_exception_is_rejected_in_stage_1 仍然成立（date + rrule 同时写违反三选一），但名字和注释已过时；要不要改名等 Aaron 定（铁律 5）
 
 ## 2026-10-10（晚）· MCP 工具上线 + 数据校验
 
