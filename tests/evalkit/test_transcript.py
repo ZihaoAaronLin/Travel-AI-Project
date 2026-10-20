@@ -1,4 +1,7 @@
-"""解析一次 `claude -p` 的 stream-json 轨迹：拿 VERDICT、工具调用顺序、用量；校验 system/init 的隔离。"""
+"""解析一次 `claude -p` 的 stream-json 轨迹。
+
+拿 VERDICT、工具调用顺序、用量；校验 system/init 的隔离。
+"""
 
 import pytest
 

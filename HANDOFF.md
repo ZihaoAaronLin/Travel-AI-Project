@@ -46,8 +46,22 @@
 - 对照了 Anthropic 的评测健康清单：状态隔离（每次空目录新进程）、基础设施错误不混进模型成绩、「没答」≠「答错」、两个方向都覆盖、每题只考一件事、轨迹全存、烟雾测试（gold 全对 / 空输出全 no_verdict）
 - 待 Aaron 定 6 件事（DESIGN.md 第 8 节）：跑哪几组、模型、reps、订阅还是 API key、轨迹进不进 git、today 的定法
 
+### 2d 设计定稿（Aaron 2026-10-20 全部按建议）
+- 第一次跑 A0 / A3 / A4 / A6；模型用 Desktop 同款（Aaron 去设置里看，写进 PREREG）；reps = 2；走订阅不加 --bare，靠 system/init 校验隔离；轨迹进 git；today 每题自写
+
+### 2d harness 测试（红，等 Aaron 审）
+- 布局：逻辑在 src/travelkb/evalkit/（可导入、可测），eval/run.py、eval/score.py 只是薄的命令行入口
+- tests/evalkit/（全部用假的 claude 轨迹，一分钱不花）：
+  - test_questions：题库格式——question 为 null 的空位跳过、id 不重复、gold.verdict 四选一、today 必填
+  - test_command：每组的 `claude -p` 命令钉死——A0 `--tools ""` + `--disallowedTools mcp__*` + `--strict-mcp-config`；A6 `--tools/--allowedTools WebSearch,WebFetch`；A3/A4 `--mcp-config` + 四个 `mcp__travelkb__*` 放行；A3 用 SOP、A4 用 base 提示；公共 flag（模型、今天、stream-json、--permission-prompts none、--max-turns 6 …）
+  - test_transcript：VERDICT 取最后一次出现、容忍加粗 / 反引号 / 大小写、非法值算 None；工具调用顺序（去 mcp__travelkb__ 前缀）；result 的 usage / cost / 轮数；错误分类（result_error / max_turns / no_result / no_init）；空回答是 no_verdict 不是错误；system/init 校验（模型、MCP server、每组禁止出现的工具；EndConversation 这类不算）
+  - test_scoring：判分矩阵 4×4 每格 + None；工具合规（顺序也要对；无工具组为 None）；Wilson（3/10 → 0.108–0.603）；McNemar 精确（8:0 → 2/256）；配对不一致计数；汇总（答错率分母是全部有结果的行）
+  - test_runner：每题一行 + 轨迹文件；每次新建空目录；reps 分行；crash → errors.jsonl；限流重试最多 3 次且每次留痕；隔离失败 / max_turns 是 harness 错误；断点续跑（跳过已有结果、重跑只出过错的）；烟雾测试：oracle 答错率 0、空输出全 no_verdict、常数 OPEN 基线全错
+- 测试定下的接口：evalkit.questions.load_questions / Question；evalkit.groups.GROUPS / GroupConfig / build_command；evalkit.transcript.parse_transcript / extract_verdict / check_init；evalkit.scoring.classify / tool_compliant / wilson / mcnemar_exact / paired_discordant / summarize；evalkit.runner.run_group / Invocation
+- 待实测确认：stream-json 的字段名（result 事件的 total_cost_usd / duration_ms / num_turns / subtype）按文档写，Aaron 跑 3 题试验时对一遍；解析器用 .get，缺字段不会崩
+
 ### 下一步
-1. Aaron：审 eval/DESIGN.md，答第 8 节 6 个问题；第 1、2 阶段的 Desktop 验收结果；2c 新景点
+1. Aaron：审 tests/evalkit/（重点：判分矩阵、合规定义、哪些算 harness 错误）；第 1、2 阶段 Desktop 验收结果；2c 新景点
 2. CC：设计定稿后写 run.py / score.py 的测试（假 runner，不花钱）给 Aaron 审 → 实现
 3. Aaron：填 q11–q30 + Wayback 存档；写 eval/PREREG.md；先跑 3 题读轨迹，再全量
 3. SOP（Project 指令）要加一段 check_day_plan 的用法：排整天行程时先 resolve 每站，再 check_day_plan，按 issues 逐条改，改完再验
