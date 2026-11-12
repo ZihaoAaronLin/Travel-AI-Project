@@ -1,5 +1,32 @@
 # HANDOFF
 
+## 2026-11-12（续三）· 四组试跑复盘
+
+### 试跑（Aaron 本机，q01–q03，reps 1，四组共 12 次）
+- **harness 全部验证通过**：0 次 harness 错误；system/init 里 A0 工具为空、A6 只有 WebSearch / WebFetch、A3 / A4 只有 travelkb 的 5 个工具且 status 为 connected；mcp.json 的 env 生效（server 起得来、日期钉住）；usage 的缓存字段名和 CC 的修正一致；没有任何 permission_denials
+- 结果：A0、A6、A4 三题全对或该弃的弃了；**A3 在 q01、q02 答成 AMBIGUOUS（不该弃也弃了）**
+
+### A3 退步的原因：CC 提议的 SOP 查询规则
+- 轨迹：A4 传 query「布达佩斯美术馆」+ Budapest → MATCH → 答对；A3 传「美术馆」+ Budapest → AMBIGUOUS → 反问
+- 「布达佩斯美术馆」是美术博物馆的正式中文名（data 里的 names.zh）。上一版 SOP 的例子写「query 只填景点名本身，严禁把城市名和景点名拼起来」，模型把它推广成了「名字里的城市一律删掉」
+- 已改 docs/SOP.md 第 1 条：用户直接说出的名称原样传，即使带城市名；只有「城市 + 的 + 通称」才拆开。两个例子正反各一。eval/groups/A3/system.md 同步重新生成
+- **没法在容器里验证**（这里不跑真的 claude）：要 Aaron 同步 Desktop 后，用 q01、q02、q03、q04 重跑 A3 / A4（新 run-id，q04 正是「布达佩斯的美术馆」的问法，金标准 AMBIGUOUS）
+
+### 另外三条发现
+1. **q03 本身有歧义**：「明年 1 月 12 日去圣史蒂芬大教堂的教堂大厅」没说城市，维也纳的 Stephansdom 中文也叫圣史蒂芬大教堂。A0、A6 都反问是哪座城市，合理。题目要写出布达佩斯（Aaron 改；金标准不变）
+2. **A3、A4 在 q03 都自己挑了一个**：resolve_poi 返回 AMBIGUOUS（教堂 / 观景台与珍宝馆），模型按用户说的「教堂大厅」选了教堂。选得对，结论也对（UNKNOWN），但 A3 违反了 SOP 的「严禁自行挑选」
+3. **根子在 resolve_poi 是精确匹配**：「圣史蒂芬大教堂的教堂大厅」「布达佩斯的美术馆」原样传进去都是 NOT_FOUND，全靠模型自己改写，SOP 只能缓解。提议（待 Aaron 定，先写测试）：resolve_poi 在 NOT_FOUND 时按「的」拆开、去掉开头的城市名再试一次，返回里标明用的是哪个说法。这样查询规则就能从 SOP 里拿掉，交给代码
+
+### 其他改动
+- run.py：git_dirty 不再把 eval/runs/ 算进去（试跑三次都显示 dirty，是因为上一轮的结果没提交）
+- eval/questions.yaml：q11–q30 的空位题型按 DESIGN 配比重排。原来 7 个空位是普通开闭馆，试跑说明这类题裸模型就会，分不出组间差别；现在普通开闭馆共 6 道、同名共 6 道（q25–q29 + q04）
+
+### 下一步
+1. Aaron：Desktop Project 指令再同步一次 docs/SOP.md（只改了第 1 条第 2 点）
+2. Aaron：git pull → `uv run python eval/run.py --model claude-opus-5-5 --run-id pilot2 --groups A3,A4 --only q01,q02,q03,q04 --reps 1` → score → 推上来
+3. Aaron：定要不要做 resolve_poi 的「的 / 城市名」回退（要做的话 CC 先写测试）
+4. Aaron：q03 补上城市；填 q11–q30 + Wayback；写 PREREG
+
 ## 2026-11-12（续二）· 红测试实现；SOP 定稿
 
 ### 做了什么

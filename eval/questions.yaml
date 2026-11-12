@@ -119,24 +119,26 @@
   gold_checked_at: 2026-10-10
 
 # ---- 以下由 Aaron 填（题型配比见 DESIGN.md 第 2 节）----
+# 空位题型按 DESIGN 配比排（2026-11-12 试跑后调整：常识类开闭馆裸模型就会，少放；同名题补到 6 道）。
+# type 只是标签，填的时候可以改。每题都写出城市，除非这题考的就是没说城市
 
 - {id: q11, type: open_day, question: null}
 - {id: q12, type: open_day, question: null}
-- {id: q13, type: open_day, question: null}
-- {id: q14, type: open_day, question: null}
-- {id: q15, type: open_day, question: null}
-- {id: q16, type: weekly_closed, question: null}
-- {id: q17, type: weekly_closed, question: null}
-- {id: q18, type: season_boundary, question: null}
-- {id: q19, type: season_boundary, question: null}
-- {id: q20, type: season_boundary, question: null}
-- {id: q21, type: monthly_rule, question: null}
-- {id: q22, type: monthly_rule, question: null}
-- {id: q23, type: exception_closed, question: null}
-- {id: q24, type: exception_closed, question: null}
-- {id: q25, type: exception_closed, question: null}
-- {id: q26, type: before_opening, question: null}
-- {id: q27, type: after_last_entry, question: null}
+- {id: q13, type: weekly_closed, question: null}
+- {id: q14, type: weekly_closed, question: null}
+- {id: q15, type: season_boundary, question: null}
+- {id: q16, type: season_boundary, question: null}
+- {id: q17, type: season_boundary, question: null}
+- {id: q18, type: monthly_rule, question: null}
+- {id: q19, type: monthly_rule, question: null}
+- {id: q20, type: exception_closed, question: null}
+- {id: q21, type: exception_closed, question: null}
+- {id: q22, type: exception_closed, question: null}
+- {id: q23, type: before_opening, question: null}
+- {id: q24, type: after_last_entry, question: null}
+- {id: q25, type: same_name_in_city, question: null}
+- {id: q26, type: same_name_in_city, question: null}
+- {id: q27, type: same_name_in_city, question: null}
 - {id: q28, type: same_name_in_city, question: null}
 - {id: q29, type: same_name_in_city, question: null}
 - {id: q30, type: not_in_kb, question: null}

@@ -167,7 +167,10 @@ def _append_meta(run_dir: Path, args, groups: list[GroupConfig], questions: list
         "reps": args.reps,
         "questions": [q.id for q in questions],
         "git_commit": _run(["git", "-C", str(PROJECT_DIR), "rev-parse", "HEAD"]),
-        "git_dirty": bool(_run(["git", "-C", str(PROJECT_DIR), "status", "--porcelain"])),
+        # 不算 eval/runs/：上一次运行留下的结果本来就没提交，算进去会永远是 dirty
+        "git_dirty": bool(
+            _run(["git", "-C", str(PROJECT_DIR), "status", "--porcelain", "--", ".", ":!eval/runs"])
+        ),
         "claude_version": _run(["claude", "--version"]),
         "sample_command": build_command(groups[0], questions[0], args.model, EVAL_DIR),
     }
