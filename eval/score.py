@@ -121,19 +121,26 @@ def _cost(results) -> list[str]:
     lines = [
         "## 用量（从 result 事件读，不估算）",
         "",
-        "| 组 | 总花费 USD | 平均轮数 | 平均耗时 s | 输入 token | 输出 token |",
+        "| 组 | 总花费 USD | 平均轮数 | 平均耗时 s | 输入 token（含缓存） | 输出 token |",
         "|---|---|---|---|---|---|",
     ]
     for group, rows in results.items():
         cost = sum(r.get("cost_usd") or 0 for r in rows)
         turns = _mean([r.get("num_turns") for r in rows])
         seconds = _mean([(r.get("duration_ms") or 0) / 1000 for r in rows])
-        tokens_in = sum((r.get("usage") or {}).get("input_tokens", 0) for r in rows)
+        tokens_in = sum(_input_tokens(r.get("usage") or {}) for r in rows)
         tokens_out = sum((r.get("usage") or {}).get("output_tokens", 0) for r in rows)
         lines.append(
             f"| {group} | {cost:.2f} | {turns:.1f} | {seconds:.0f} | {tokens_in} | {tokens_out} |"
         )
     return lines + [""]
+
+
+def _input_tokens(usage: dict) -> int:
+    # input_tokens 只算没命中缓存的部分；系统提示、工具定义多半走缓存，记在另外两个字段里。
+    # 试跑时只看 input_tokens，A0 每题只有 2 个，明显不对
+    fields = ("input_tokens", "cache_creation_input_tokens", "cache_read_input_tokens")
+    return sum(usage.get(f) or 0 for f in fields)
 
 
 def _mean(values: list) -> float:

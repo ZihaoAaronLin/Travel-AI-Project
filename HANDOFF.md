@@ -1,5 +1,43 @@
 # HANDOFF
 
+## 2026-11-12（续）· SOP 审查 + A0 / A6 试跑
+
+### A0 / A6 试跑 3 题（Aaron 本机，claude-opus-5-5，reps 1）
+- harness 通了：6 次运行全部出结果，0 次 harness 错误；完整模型 ID 和 system/init 对得上
+- 两组都是 0 错：q01、q02 答对，q03（2027-01-12，窗外）两组都弃答 = 该弃的弃了
+- 这三题是常识题（美术馆周一闭馆），裸模型本来就会。H1 能不能成立取决于难题：换季、例外日、最后入场、同名、收费时段外。q11–q30 要往这几类压
+- 用量：A0 平均 21 s、1 轮；A6 平均 41 s、2.7 轮。按这个估，全量 240 次大约 2 小时；订阅下 total_cost_usd 只是估算，不扣钱，但占用量额度，撞上限就用同一条命令续跑
+- **发现 score.py 的问题，已修：** 输入 token 只读了 input_tokens（A0 每题 2 个），没算走缓存的部分。改成 input_tokens + cache_creation_input_tokens + cache_read_input_tokens。后两个字段名按 API 文档写，**待 Aaron 推上试跑轨迹后核对**
+
+### 更正上一轮 CC 的建议
+- 上一轮建议 resolve_poi 的描述写「传用户原话，不要改写」，**这条是错的**：实测「布达佩斯的美术馆」原样传进去是 NOT_FOUND
+- 实测结果：「布达佩斯的美术馆」→ NOT_FOUND；「布达佩斯美术馆」→ MATCH（只命中美术博物馆，没追问）；「美术馆」+ city=Budapest → AMBIGUOUS
+- 正确的写法是「query 只填景点名，城市放 city 参数，不要把城市名和景点名拼成新名字」。代码侧也可以让 resolve_poi 自己去掉「<城市>的」前缀，放到 2c 再议
+
+### SOP 审查（Aaron 的 Project 指令）
+已放进 eval/groups/A3/system.md，后面接所有组相同的 VERDICT 段；**DRAFT 标记保留**，Aaron 确认后删。A3 和 A4 的差别就是「SOP」对「一行通用人设」。
+
+三处与工具实际字段不符，已改（不改的话模型会去找不存在的字段）：
+1. 候选列表「含名称、城市、说明」→「含名称、城市、类别」：resolve_poi 的候选没有「说明」字段，模型会自己编
+2. `close_time` / `last_entry_time` → `close` / `last_entry`：is_open 返回的字段叫这两个
+3. 第 5 条「遇 NOT_FOUND 或 UNKNOWN」：resolve_poi 不会返回 UNKNOWN，UNKNOWN 来自 check_day_plan → 改成「遇 NOT_FOUND 或后面 check_day_plan 报出的 UNKNOWN」
+
+建议改、但没动（改变行为，等 Aaron 定）：
+1. **第 5 条「直至 issues 清零」做不到。** check_day_plan 里只要有一站无法核验（UNKNOWN），ok 就永远是 false；WARNING 也算 issues。照字面执行，模型要么把用户想去的站删掉，要么一直调到轮数用完。建议：「改到没有 BLOCKER 为止；WARNING 转告用户；UNKNOWN 的站点标『未核验，请以官网为准』，不要为了清零删掉」
+2. **第 1 条加 query 的写法**（对应 Desktop 观察 2）：「query 只填景点名，城市放 city 参数；不要把城市名和景点名拼成新名字（『布达佩斯的美术馆』→ query『美术馆』+ city『Budapest』）」
+3. **第 2 条让代码比时刻：**「用户给了到达时刻，就作为 time 传给 is_open」。现在的写法让模型自己拿到达时间和 last_entry 比，这正是本项目要交给代码的事
+4. 第 5 条补 find_open_pois：「闭馆的站点用 find_open_pois 找当天开放的替代」
+5. 补 warnings 和 next_open_date：「warnings 里的提醒要转告；CLOSED 且有 next_open_date 就告诉用户哪天能去」（2a 时 Aaron 要的「例外之后给建议」）
+
+定稿后 Desktop 的 Project 指令要换成同一份，A3 的数字才代表真实使用。
+
+### 下一步
+1. Aaron：审 16 条红测试（TRAVELKB_TODAY、check_init 看 status，上一节）
+2. Aaron：SOP 五条建议逐条定；Desktop Project 指令同步
+3. Aaron：把 eval/runs/pilot 提交推上来，CC 核对 init 的 tools 列表和 usage 字段名
+4. CC：红测试放行后实现；删 DRAFT 标记；A3 / A4 试跑 3 题
+5. Aaron：填 q11–q30（难题为主，含一道「布达佩斯的美术馆」问法）+ Wayback；写 PREREG；然后全量
+
 ## 2026-11-12 · 2d harness 实现；第 1 阶段 Desktop 验收通过
 
 ### 第 1 阶段 Desktop 验收（Aaron，截图）
