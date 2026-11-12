@@ -146,3 +146,17 @@ def test_init_ignores_harmless_builtins():
     init = init_event(tools=["EndConversation"])
 
     assert check_init(init, GROUPS["A0"], "claude-opus-5-5") == []
+
+
+# ---- 2d 实现时发现的漏洞（新增，等 Aaron 审）----
+
+
+def test_check_init_flags_mcp_server_that_failed_to_start():
+    # travelkb 起不来时（uv 路径错、依赖装坏），init 里照样有它的名字，只是 status 不是 connected。
+    # 只看名字就会放行：这一次实际上没有工具可用，答案却记在 A3 名下
+    init = init_event(mcp_servers=["travelkb"])
+    init["mcp_servers"][0]["status"] = "failed"
+
+    problems = check_init(init, GROUPS["A3"], "claude-opus-5-5")
+
+    assert any("travelkb" in p and "failed" in p for p in problems)

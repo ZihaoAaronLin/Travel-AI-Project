@@ -45,3 +45,26 @@ async def test_ping_is_read_only(client: Client):
 
     assert ping.annotations is not None
     assert ping.annotations.read_only_hint is True
+
+
+@pytest.mark.anyio
+async def test_module_server_reads_pinned_today_from_env(monkeypatch):
+    # 评测时 claude 按 mcp.json 启动的就是这个模块级 server，env 里的 TRAVELKB_TODAY 必须真的生效。
+    # 模块在 import 时组装 server，所以要设好环境变量后重新加载；结束后恢复成不钉的版本
+    import importlib
+
+    import travelkb.server as server_module
+
+    monkeypatch.setenv("TRAVELKB_TODAY", "2026-10-12")  # 周一；真实数据 10-08 核验
+    try:
+        reloaded = importlib.reload(server_module)
+        async with Client(reloaded.mcp, raise_exceptions=True) as c:
+            result = await c.call_tool("is_open", {"poi_id": "hungarian-national-gallery"})
+    finally:
+        monkeypatch.delenv("TRAVELKB_TODAY")
+        importlib.reload(server_module)
+
+    content = result.structured_content
+    assert content["date"] == "2026-10-12"
+    assert content["status"] == "CLOSED"  # 国家美术馆周一闭馆
+    assert content["warnings"] == []  # 核验后第 4 天，不过期

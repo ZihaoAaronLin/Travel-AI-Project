@@ -1,5 +1,62 @@
 # HANDOFF
 
+## 2026-11-12 · 2d harness 实现；第 1 阶段 Desktop 验收通过
+
+### 第 1 阶段 Desktop 验收（Aaron，截图）
+- 通过：在 Project（带 SOP）里问美术馆 → resolve_poi 拿到 AMBIGUOUS → 先问是哪一家 → is_open、find_open_pois → 带来源的表格
+- 两条观察（已记进 ROADMAP 第 1 阶段，算 H3 的先期证据）：
+  1. 不建 Project 的普通对话：第一句不明说「用 travel-kb」，模型就不调工具
+  2. 不建 Project：「布达佩斯**的**美术馆」被模型改写成「布达佩斯美术馆」再查 → MATCH，跳过了追问；同一句在 Project 里会先问。改写发生在模型这一侧，resolve_poi 收到的已经不是原话，代码拦不住
+- 建议（没做，等 Aaron 定）：resolve_poi 的 query 参数描述加一句「传用户原话，不要改写或补全」；q11–q30 的同名题里放一道「布达佩斯的美术馆」这种问法
+
+### 2d harness 实现（Aaron 放行 tests/evalkit 之后）
+- src/travelkb/evalkit/：questions、groups、transcript、scoring、runner 五个模块；tests/evalkit 的 81 条没改动、全过。实现时 VERDICT 正则漏了「值两边带反引号」一格，被测试抓住
+- eval/run.py、eval/score.py：薄命令行入口，逻辑都在 evalkit 里，没有单独的单元测试。用一个假的 claude（按参数吐 stream-json）端到端跑过：选题、断点续跑（第二次 0 次调用）、模型写别名 → 隔离失败进 errors.jsonl、score 出 summary.md
+- eval/groups/base.md：所有组共用的最简提示 + VERDICT 格式（DESIGN 第 4 节原文）
+- eval/groups/A3/system.md：**草稿**，第一行是 DRAFT 标记，run.py 见到标记拒跑 A3。Aaron 把「使用 travel-kb 的规则」换成 Project 指令原文，再删掉第一行
+- run.py 每次启动往 runs/<run_id>/meta.jsonl 记一行：commit、有没有未提交改动、claude 版本、一条样例命令。PREREG 和结果靠它对上
+- 有工具的组按 today 分批，每个 today 生成 eval/groups/mcp-<日期>.json（本机绝对路径，已 gitignore）。容器里从空目录用这条命令起 server、列出 5 个工具，确认能起
+- 本机 claude CLI 认得 harness 用的全部 flag（--system-prompt-file、--max-turns 不在 --help 里，但解析器接受）
+- 全部 270 条测试通过（不含下面新增的红测试）
+
+### 实现时发现两个会让 A3 / A4 结果失真的漏洞 → 新增红测试（等 Aaron 审）
+1. **server 的「今天」用真实时钟。** 题目按「今天是 2026-10-10」出，数据 10-08 核验；在 11 月跑评测，server 每次都带 STALE 提醒（核验后 35 天以上），不给日期时还会查成真实的今天。A3 / A4 的弃答里就混进了「跑评测那天数据已过期」，和题目无关
+   - 提议：环境变量 TRAVELKB_TODAY=YYYY-MM-DD 钉住 server 的今天。三个工具的缺省日期和过期判断都用它；它就是景点当地日期，不再按时区换算；格式不对启动即报错，不悄悄退回真实时钟
+   - 为什么用环境变量不用工具参数：「今天」和「过期没有」不能交给模型决定。只在评测的 mcp.json 里设；Desktop 配置里不设，行为和现在完全一样
+   - 测试：tests/unit/test_tools_pinned_today.py（14 条）+ tests/test_server.py 末尾 1 条（模块级 server 真的读了环境变量）
+   - run.py 已按这个接口写好 mcp.json 的 env；server 没实现之前，run.py 拒跑 A3 / A4
+2. **MCP server 起不来也会被当成隔离通过。** check_init 只看 server 名字；travelkb 启动失败时 init 里照样有它，只是 status 不是 connected → A3 实际没工具，答案却记在 A3 名下
+   - 测试：tests/evalkit/test_transcript.py 末尾 1 条（status 为 failed 必须报问题）
+- 现在 `uv run pytest` 会在收集阶段就停：新测试 import 了还不存在的 TODAY_ENV。看其余测试：`uv run pytest --ignore=tests/unit/test_tools_pinned_today.py`（270 过、2 红）
+
+### 和 DESIGN.md 不一致的地方（都是小事）
+- 轨迹路径多一层：runs/<run_id>/<组>/traces/<题>_rep<k>.jsonl
+- DESIGN 第 5 节的 refusal（模型拒答）没单列：拒答没有 VERDICT 行，记成 no_verdict，不进答错率；要区分得读轨迹
+- 配对检验按 (题, rep) 配对：同一题的两个 rep 不独立，p 值偏乐观；summary.md 里写明了
+- 待试跑确认：--model 传别名（opus）时 system/init 报的很可能是完整 ID，字符串对不上就全部记成隔离失败。所以 --model 一律写完整 ID
+
+### Aaron 试跑 3 题（A0 / A6 现在就能跑，不用等上面两条）
+```bash
+git pull && uv sync
+# ~/.claude/CLAUDE.md 里和旅行有关的内容先清掉或改名（非 bare 模式会加载它）
+uv run python eval/run.py --model <Desktop 里用的完整模型 ID> --run-id pilot --groups A0,A6 --only q01,q02,q03 --reps 1
+uv run python eval/score.py --run-id pilot
+```
+- 读 eval/runs/pilot/A0/traces/q01_rep0.jsonl：第一行 system/init 有没有 model、tools、mcp_servers；最后一行 result 有没有 total_cost_usd、num_turns、usage、duration_ms。字段名不对就告诉 CC
+- errors.jsonl 有内容先看 detail 那一栏
+
+### 下一步
+1. Aaron：审新增的 16 条红测试（重点：用环境变量钉今天合不合适；格式错就启动失败合不合适）
+2. Aaron：A0 / A6 试跑 3 题，回报字段
+3. CC：红测试放行后实现（server 钉住今天 + check_init 看 status），之后 A3 / A4 才能试跑
+4. Aaron：A3 的 SOP 原文；填 q11–q30 + Wayback 存档；写 eval/PREREG.md（模型、组、reps、H1 / H3 / H5、主指标答错率）
+5. 在跑的：Desktop 第 2 阶段验收；2c 新景点
+6. 2e：query_kb + build_db（最后做）
+
+### 已知问题
+- 真实数据 10-08 核验，今天 11-12：Desktop 里每个回答都带 STALE 提醒。这是设计（14 天阈值），不是 bug；要消掉得回官网重新核验、更新 verified_at
+- 同名撞车 4 组的金标准仍只有「美术馆」一组（2c 补）
+
 ## 2026-10-10（夜）· 第 1 阶段收尾 + 第 2 阶段计划（待 Aaron 确认）
 
 ### 第 1 阶段验收

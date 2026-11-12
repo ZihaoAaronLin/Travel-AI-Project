@@ -183,6 +183,12 @@ CLAUDE.md 模板（第 0 阶段原样交给 CC）：
 - Claude Desktop 里问「下周一去布达佩斯美术馆」：模型先调 resolve_poi，拿到 AMBIGUOUS 后问你是哪一家。截图留给 README
 - Claude Desktop 的 Project 指令里写一版最简 SOP（先 resolve 再 is_open；UNKNOWN 就说不确定），作为 A 版起点
 
+**实际结果（Aaron 2026-11-12 验收通过）**
+- 在 Project（带 SOP）里：resolve_poi → AMBIGUOUS → 先问是哪一家 → is_open → 带来源回答
+- 不建 Project 的普通对话：第一句不明说「用 travel-kb」，模型就不调工具
+- 不建 Project：「布达佩斯的美术馆」被模型改写成「布达佩斯美术馆」再查，命中唯一一家，跳过了追问；Project 里同一句会先问。改写在模型一侧发生，resolve_poi 收不到原话
+- 这两条是 H3（没有 SOP，工具合规率更低）的先期证据，第 2 阶段评测里用 A4 对 A3 量化
+
 **学会检查点**
 - is_open 为什么只收 poi_id？Gemini 那段 `name LIKE ? + fetchone()` 错在哪？
 - UNKNOWN 和 CLOSED 为什么不能合并？为什么绝不能默认 OPEN？
