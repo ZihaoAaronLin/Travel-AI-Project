@@ -1,5 +1,47 @@
 # HANDOFF
 
+## 2026-11-12（续四）· pilot2 + Desktop 第 2 阶段 + resolve_poi 回退的红测试
+
+### pilot2（A3 / A4，q01–q04，SOP 修正后）
+- A3 的 q01、q02 恢复正确：query 原样传「布达佩斯美术馆」→ MATCH。SOP 第 1 条的修正有效
+- q04「下周去布达佩斯的美术馆」：A3、A4 都传「美术馆」+ Budapest → AMBIGUOUS → 反问，金标准 AMBIGUOUS，答对
+- q03：两组仍然拿到 AMBIGUOUS 后自己挑了教堂（结论 UNKNOWN 是对的）。q03 题目还没补城市
+- 四题上 A3 和 A4 完全一样：-p 模式下没有 SOP 的模型也会把「布达佩斯的」拆开，和 Desktop 普通对话的表现不同。H3 要靠难题才看得出差别
+- meta 里 git_dirty 仍是 true，但 commit 已含排除 eval/runs/ 的修正 → Aaron 本机还有别的未提交文件（多半是 .DS_Store，已加进 .gitignore；不是的话 `git status` 看一眼）
+
+### Desktop 第 2 阶段验收（Aaron 截图，CC 的判断）
+截图里能看到的都对：
+- 三站都先 resolve_poi，三个都是 AMBIGUOUS，没有自己挑，最后逐站列候选问用户
+- 发现 10-12 已经过去（真实今天 11-12），去查 2027-10-12，超出核验窗口 → 全部 UNKNOWN，没有编
+- 渔人堡 20:00：收费观景台官网只写到 19:00 → 无法核验；免费区域没有来源 → 无法核验
+- 用 find_open_pois 找周一的替代；转告了「核验后已 35 天」的提醒；每行带 source_url 和 verified_at
+
+截图里没有、所以还不能算验收完的：
+- check_day_plan → 按 issues 改 → 再验到没有 BLOCKER 的闭环。模型说「你选好后再跑」，截图停在这一步。Aaron 如果接着选了并跑通，第 2 阶段就验收完；没跑的话用下面的新日期重来一遍
+- 验收脚本的日期 10-12 已经过去，改成 **2026-11-16（周一）**：两家美术馆都闭馆，BLOCKER 照样会出现，而且在核验窗口内
+
+两处和 SOP 字面不一致，都无害：
+- SOP 说 AMBIGUOUS 要立即停，模型先把所有候选都查了一遍再问。体验更好，但不是 SOP 的写法
+- 结尾说「再出地图路线」：travel-kb 没有地图工具，可能是 Desktop 里的别的连接器，也可能是空头承诺
+
+### resolve_poi 回退：红测试（等 Aaron 审）
+- 规则写在 tests/unit/test_resolve_fallback.py 开头：只在原词 NOT_FOUND 时走；先去掉开头的已知城市名（后面可跟「的」），再处理「A 的 B」
+- 三条安全线（各有测试）：
+  1. 认不出的城市名不去掉：「维也纳的国会大厦」→ NOT_FOUND，不会退成布达佩斯的国会大厦
+  2. 「A 的 B」里 A 必须本身是景点名，否则 NOT_FOUND；没有城市别名表时「布达佩斯的美术馆」也是 NOT_FOUND，绝不并成「布达佩斯美术馆」
+  3. 只认出 A、认不出 B（「圣史蒂芬大教堂的教堂大厅」「国会大厦的地下室」）→ 一律 AMBIGUOUS，哪怕只有一个候选：部分开放时间可能不同，必须问
+- 原词能直接命中的永远优先：「布达佩斯美术馆」是正式名称，不拆
+- 接口：resolve_poi(..., city_names=)；ResolveResult 新增 matched_query（回退时实际用来匹配的说法）；ResolveResult.city 填实际用来过滤的城市；loader.load_city_names；build_server(..., city_names=)
+- 实现时要新建 **data/cities.yaml**（`Budapest: [布达佩斯]`）。这是 CC 起草的译名，不是营业事实，Aaron 确认一下
+- 测试数：核心 17、城市表 4、工具 2、真实数据 6（其中 2 条现在就过：「布达佩斯美术馆」原样命中、「维也纳的国会大厦」NOT_FOUND，留着防回退改坏）
+- `uv run pytest` 现在会停在收集阶段（test_city_names.py import 了还不存在的函数）。看其余：`uv run pytest --ignore=tests/unit/test_city_names.py`
+
+### 下一步
+1. Aaron：审 resolve_poi 回退的 29 条测试 + 确认 data/cities.yaml 的写法
+2. Aaron：Desktop 第 2 阶段补完闭环（日期改 2026-11-16，选完候选后看 check_day_plan 改到通过）
+3. Aaron：q03 补城市；填 q11–q30 + Wayback；写 PREREG
+4. CC：测试放行后实现回退；之后 A3 / A4 再试跑一次（回退会改变工具行为）
+
 ## 2026-11-12（续三）· 四组试跑复盘
 
 ### 试跑（Aaron 本机，q01–q03，reps 1，四组共 12 次）

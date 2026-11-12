@@ -10,3 +10,6 @@ __pycache__/
 
 # eval/run.py 按日期生成的 MCP 配置，含本机绝对路径
 eval/groups/mcp*.json
+
+# macOS
+.DS_Store
