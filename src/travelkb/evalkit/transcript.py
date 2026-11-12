@@ -94,6 +94,13 @@ def check_init(init: dict, group: GroupConfig, expected_model: str) -> list[str]
         problems.append(
             f"mcp_servers 是 {servers}，{group.name} 组要求 {sorted(group.mcp_servers)}"
         )
+    # 名字对了还不够：server 起不来时 init 里照样有它，只是没有工具可用
+    for server in init.get("mcp_servers", []):
+        status = server.get("status")
+        if status != "connected":
+            problems.append(
+                f"MCP server {server.get('name', '?')} 的状态是 {status!r}，不是 connected"
+            )
 
     for tool in init.get("tools", []):
         if any(tool.startswith(prefix) for prefix in group.forbidden_tools):

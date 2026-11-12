@@ -10,8 +10,9 @@ Claude Desktop 以 stdio 方式把本进程起成子进程：stdout 是 JSON-RPC
 
 import datetime as dt
 import logging
+import os
 import re
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from importlib.metadata import version
 from pathlib import Path
 from typing import Annotated, Literal
@@ -48,9 +49,27 @@ _TIME = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
 # 返回「现在」的函数，必须带时区。只有 server 层取「现在」（铁律 3），测试里注入固定时刻
 Clock = Callable[[], dt.datetime]
 
+# 评测用：把 server 的「今天」钉在某一天。eval/run.py 写 mcp.json 时用同一个常量
+TODAY_ENV = "TRAVELKB_TODAY"
+
 
 def utc_now() -> dt.datetime:
     return dt.datetime.now(dt.UTC)
+
+
+def today_from_env(env: Mapping[str, str]) -> dt.date | None:
+    """读 TRAVELKB_TODAY。没设返回 None，用真实时钟。
+
+    设了但写错就报错、server 起不来，不悄悄退回真实时钟：
+    那样评测照样跑完，结果里却混进了「跑评测那天」的日期。
+    """
+    value = env.get(TODAY_ENV)
+    if value is None:
+        return None
+    try:
+        return _iso_date(value)
+    except ValueError:
+        raise ValueError(f"{TODAY_ENV} 要写成 YYYY-MM-DD，收到 {value!r}") from None
 
 
 class PingResult(BaseModel):
@@ -137,11 +156,24 @@ class FindOpenOutput(BaseModel):
     unverified: list[str] = Field(description="无法核验的 poi_id：不是没有，是数据说不准")
 
 
-def build_server(pois: Sequence[Poi], clock: Clock = utc_now) -> MCPServer:
-    """用给定的景点数据和时钟组装 server。测试传假数据和固定时钟，正式运行传 data/pois/。"""
+def build_server(
+    pois: Sequence[Poi], clock: Clock = utc_now, today: dt.date | None = None
+) -> MCPServer:
+    """用给定的景点数据和时钟组装 server。测试传假数据和固定时钟，正式运行传 data/pois/。
+
+    today 只给评测用：给了，三个工具的「今天」（缺省日期 + 判断过期）都是它，不再看时钟。
+    """
     pois = list(pois)
     by_id = {poi.id: poi for poi in pois}
     mcp = MCPServer("travelkb")
+    if today is not None:
+        logger.warning("%s=%s：server 的「今天」被钉住，只应在评测时出现", TODAY_ENV, today)
+
+    def today_for(poi: Poi | None) -> dt.date:
+        # 钉住的日期就是景点当地的今天，不再按时区换算；没有景点可参照时退回 UTC 日期
+        if today is not None:
+            return today
+        return clock().date() if poi is None else _local_today(poi, clock)
 
     @mcp.tool(annotations=READ_ONLY)
     def ping() -> PingResult:
@@ -200,7 +232,7 @@ def build_server(pois: Sequence[Poi], clock: Clock = utc_now) -> MCPServer:
             )
 
         # 「今天」只在这里取一次：不给日期时拿它当判定日期，另外用它判断数据有没有过期（铁律 3）
-        today = _local_today(poi, clock)
+        today = today_for(poi)
         if date is None:
             day, date_source = today, "poi_local_today"
         else:
@@ -233,7 +265,7 @@ def build_server(pois: Sequence[Poi], clock: Clock = utc_now) -> MCPServer:
         first = by_id.get(stops[0].poi_id)
         if first is None:
             raise ToolError(f"未知 poi_id {stops[0].poi_id!r}：先调 resolve_poi 拿到 poi_id")
-        today = _local_today(first, clock)
+        today = today_for(first)
         day = today if date is None else _parse_date(date)
         try:
             plan = [
@@ -269,7 +301,7 @@ def build_server(pois: Sequence[Poi], clock: Clock = utc_now) -> MCPServer:
         也不要推荐它们，告诉用户「未核验」即可。知识库没收录的景点不会出现在任何一栏。
         """
         in_city = [p for p in pois if p.city.casefold() == city.strip().casefold()]
-        today = _local_today(in_city[0], clock) if in_city else clock().date()
+        today = today_for(in_city[0] if in_city else None)
         day = today if date is None else _parse_date(date)
         at = None if time is None else _parse_time(time)
         try:
@@ -287,12 +319,17 @@ def _local_today(poi: Poi, clock: Clock) -> dt.date:
     return clock().astimezone(ZoneInfo(poi.tz)).date()
 
 
+def _iso_date(value: str) -> dt.date:
+    # 先用正则卡住写法：fromisoformat 还接受 20261006、2026-W41-2 等写法，这里只认 YYYY-MM-DD；
+    # 2026-02-30 这种写法对、日子不存在的，由 fromisoformat 报 ValueError
+    if not _DATE.match(value):
+        raise ValueError(value)
+    return dt.date.fromisoformat(value)
+
+
 def _parse_date(value: str) -> dt.date:
-    # 先用正则卡住写法：fromisoformat 还接受 20261006、2026-W41-2 等写法，这里只认 YYYY-MM-DD
     try:
-        if not _DATE.match(value):
-            raise ValueError
-        return dt.date.fromisoformat(value)
+        return _iso_date(value)
     except ValueError:
         raise ToolError(f"date 要写成 YYYY-MM-DD（景点当地日期），收到 {value!r}") from None
 
@@ -390,8 +427,9 @@ def _find_output(result: FindOpenResult) -> FindOpenOutput:
     )
 
 
-# Claude Desktop 启动的就是这个 server：启动时读一次 data/pois/，数据有错就直接启动失败
-mcp = build_server(load_pois(DATA_DIR))
+# Claude Desktop 启动的就是这个 server：启动时读一次 data/pois/，数据有错就直接启动失败。
+# TRAVELKB_TODAY 只在评测的 mcp.json 里设；Desktop 配置里不设，行为不变
+mcp = build_server(load_pois(DATA_DIR), today=today_from_env(os.environ))
 
 
 def main() -> None:

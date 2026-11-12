@@ -1,5 +1,27 @@
 # HANDOFF
 
+## 2026-11-12（续二）· 红测试实现；SOP 定稿
+
+### 做了什么
+- Aaron 放行 16 条红测试 → 实现，tests/ 未改动，全部 286 条通过
+  - server.py：TODAY_ENV、today_from_env、build_server(..., today=)；三个工具的「今天」都走同一个 today_for；钉住时往 stderr 打一条 warning；模块级 server 读 os.environ
+  - 日期解析抽成 _iso_date，工具参数和环境变量共用（2026-02-30 这类写法对、日子不存在的也拒收）
+  - evalkit/transcript.py：check_init 对每个 MCP server 检查 status 是不是 connected
+- 容器里实测：按 run.py 生成的 mcp.json 起真实 server，is_open 不给日期 → 2026-10-10、warnings 为空；TRAVELKB_TODAY=2026-10-1 → 启动即报错退出
+- SOP：Aaron 同意五条建议。定稿在 docs/SOP.md（Desktop Project 指令照抄这个文件）；eval/groups/A3/system.md = docs/SOP.md + 所有组共用的 VERDICT 段，DRAFT 标记已删
+- 定稿时多查出一条：resolve_poi 的 city 只认英文名，city=「布达佩斯」→ NOT_FOUND。SOP 第 1 条写明「城市用英文名」
+
+### 待 A3 / A4 试跑确认
+- system/init 里 MCP server 已连接时 status 的字符串是不是 "connected"。不是的话每题都会被记成隔离失败，errors.jsonl 的 detail 会写出实际值
+- claude 启动 MCP server 时，mcp.json 里的 env 是叠加在本机环境变量上，还是替换掉。若是替换，uv 可能找不到 HOME，server 起不来，status 会是 failed
+
+### 下一步
+1. Aaron：Desktop Project 指令换成 docs/SOP.md 全文
+2. Aaron：git pull → A3 / A4 试跑 3 题（run-id 仍用 pilot）→ score → 把 eval/runs/pilot 提交推上来
+3. CC：读试跑轨迹，核对 init 的 tools 列表、MCP status、usage 字段名；A3 有没有按 SOP 先 resolve 再 is_open
+4. Aaron：填 q11–q30（难题为主）+ Wayback；写 PREREG；然后全量
+5. 可选：加一条测试保证 A3/system.md 始终等于 docs/SOP.md + VERDICT 段，防止两边改一边忘一边
+
 ## 2026-11-12（续）· SOP 审查 + A0 / A6 试跑
 
 ### A0 / A6 试跑 3 题（Aaron 本机，claude-opus-5-5，reps 1）
