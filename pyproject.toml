@@ -42,6 +42,7 @@ select = ["E", "F", "I", "UP", "B", "T20"]
 [tool.ruff.lint.per-file-ignores]
 # scripts/ 是命令行工具，往终端打印是它的本职；禁 print 只针对 server 代码（stdout 是协议通道）
 "scripts/*" = ["T201"]
+"eval/*" = ["T201"]
 
 [tool.ruff.lint.isort]
 # 显式声明本项目的包，不让 ruff 按目录猜（tests/unit 下会猜错）
