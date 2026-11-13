@@ -26,4 +26,5 @@
 ## 常用命令
 - uv run pytest
 - uv run mcp dev src/travelkb/server.py
-- uv run python scripts/validate_data.py（build_db.py 推迟到第 2 阶段）
+- uv run python scripts/validate_data.py
+- uv run python scripts/build_db.py（生成 build/travelkb.sqlite，只有 query_kb / 评测 A2 组用）

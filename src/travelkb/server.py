@@ -25,13 +25,15 @@ from pydantic import BaseModel, Field
 
 from travelkb.core.hours import Caveat, OpenResult
 from travelkb.core.hours import is_open as judge_opening
-from travelkb.core.loader import load_pois
+from travelkb.core.loader import load_city_names, load_pois
 from travelkb.core.models import Poi
 from travelkb.core.plan import DayPlanReport, FindOpenResult, PlanIssue, PlanWarning, Stop
 from travelkb.core.plan import check_day_plan as check_plan
 from travelkb.core.plan import find_open_pois as find_open
 from travelkb.core.resolve import ResolveResult
 from travelkb.core.resolve import resolve_poi as resolve_name
+from travelkb.sql.build import DEFAULT_DB_PATH
+from travelkb.sql.readonly import QueryRejected, QueryResult, ReadOnlyKB, TableSchema
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +42,7 @@ SERVER_VERSION = version("travel-kb")
 
 # src/travelkb/server.py → 往上两级是项目根目录
 DATA_DIR = Path(__file__).resolve().parents[2] / "data" / "pois"
+CITIES_FILE = DATA_DIR.parent / "cities.yaml"
 
 READ_ONLY = ToolAnnotations(read_only_hint=True)
 
@@ -51,10 +54,22 @@ Clock = Callable[[], dt.datetime]
 
 # 评测用：把 server 的「今天」钉在某一天。eval/run.py 写 mcp.json 时用同一个常量
 TODAY_ENV = "TRAVELKB_TODAY"
+# 评测 A2 组用：设成 1 才注册 query_kb / describe_schema
+SQL_ENV = "TRAVELKB_ENABLE_SQL"
 
 
 def utc_now() -> dt.datetime:
     return dt.datetime.now(dt.UTC)
+
+
+def sql_kb_from_env(env: Mapping[str, str], db_path: Path) -> ReadOnlyKB | None:
+    """读 TRAVELKB_ENABLE_SQL。没设或 "0" 是关；"1" 打开只读库；别的值报错，不能悄悄当成关。"""
+    value = env.get(SQL_ENV)
+    if value is None or value == "0":
+        return None
+    if value != "1":
+        raise ValueError(f"{SQL_ENV} 只能是 1（开）或 0（关），收到 {value!r}")
+    return ReadOnlyKB(db_path)  # 库文件不存在就在这里报错，server 起不来
 
 
 def today_from_env(env: Mapping[str, str]) -> dt.date | None:
@@ -156,14 +171,25 @@ class FindOpenOutput(BaseModel):
     unverified: list[str] = Field(description="无法核验的 poi_id：不是没有，是数据说不准")
 
 
+class SchemaOutput(BaseModel):
+    tables: list[TableSchema]
+
+
 def build_server(
-    pois: Sequence[Poi], clock: Clock = utc_now, today: dt.date | None = None
+    pois: Sequence[Poi],
+    clock: Clock = utc_now,
+    today: dt.date | None = None,
+    city_names: Mapping[str, Sequence[str]] | None = None,
+    sql_kb: ReadOnlyKB | None = None,
 ) -> MCPServer:
     """用给定的景点数据和时钟组装 server。测试传假数据和固定时钟，正式运行传 data/pois/。
 
     today 只给评测用：给了，三个工具的「今天」（缺省日期 + 判断过期）都是它，不再看时钟。
+    city_names 是城市的其他叫法（data/cities.yaml），resolve_poi 回退时用。
+    sql_kb 只给评测 A2 组：给了才注册 query_kb / describe_schema。
     """
     pois = list(pois)
+    city_names = dict(city_names or {})
     by_id = {poi.id: poi for poi in pois}
     mcp = MCPServer("travelkb")
     if today is not None:
@@ -191,14 +217,18 @@ def build_server(
 
         返回的 status：
         - MATCH：唯一确定，用 candidates[0].poi_id 去调 is_open。
-        - AMBIGUOUS：有多个同名景点。不要自己挑，把 candidates 列给用户，问清楚是哪一个。
+        - AMBIGUOUS：有多个同名景点，或者只认出了说法的一部分
+          （如「国会大厦的地下室」只认出国会大厦）。
+          不要自己挑，把 candidates 列给用户，问清楚是哪一个、是不是这个。
         - NOT_FOUND：知识库里没有。如实告诉用户「未收录，无法核验」，不要凭印象回答开放时间。
 
-        只做精确匹配（不分大小写、忽略变音符号），不做模糊匹配；
-        可以换个叫法（中文名 / 英文名 / 当地名）再试。
+        只做精确匹配（不分大小写、忽略变音符号），不做模糊匹配。原词匹配不上时会拆开再试一次：
+        去掉开头的城市名（「布达佩斯的美术馆」→「美术馆」），或按「的」拆开（「渔人堡的收费观景台」）。
+        这时 matched_query 是实际用来匹配的说法，回答里告诉用户是按哪个名字查到的。
+        还是 NOT_FOUND 的话，可以换个叫法（中文名 / 英文名 / 当地名）再试。
         """
         try:
-            result = resolve_name(query, pois, city=city)
+            result = resolve_name(query, pois, city=city, city_names=city_names)
         except ValueError as err:
             raise ToolError(f"query 不能为空：{err}") from err
         logger.info("resolve_poi %r city=%r -> %s", query, city, result.status)
@@ -311,7 +341,37 @@ def build_server(
         logger.info("find_open_pois %s %s %s -> %d open", city, day, time, len(result.open))
         return _find_output(result)
 
+    if sql_kb is not None:
+        _register_sql_tools(mcp, sql_kb)
     return mcp
+
+
+def _register_sql_tools(mcp: MCPServer, kb: ReadOnlyKB) -> None:
+    """A2 对照组的两个工具：判定交给模型自己写的 SQL。默认不注册，Desktop 日常用不到。"""
+
+    @mcp.tool(annotations=READ_ONLY)
+    def describe_schema() -> SchemaOutput:
+        """列出知识库的表和列。写 query_kb 的 SQL 之前先调这个。"""
+        return SchemaOutput(tables=kb.schema())
+
+    @mcp.tool(annotations=READ_ONLY)
+    def query_kb(
+        sql: Annotated[
+            str, Field(description="一条只读的 SELECT 查询（可以用 WITH / WITH RECURSIVE）")
+        ],
+    ) -> QueryResult:
+        """在景点知识库上执行一条只读 SELECT，返回 columns、rows，结果太多时 truncated 为 true。
+
+        表名和列名先用 describe_schema 查。日期都是 YYYY-MM-DD 文本、时刻都是 HH:MM 文本，
+        直接用字符串比较先后。exception_days 里是展开好的例外日期，优先于 rules 里的每周规则。
+        只读：写操作、PRAGMA、多条语句、超时的查询都会被拒绝，错误信息会说明原因。
+        """
+        try:
+            result = kb.query(sql)
+        except QueryRejected as err:
+            raise ToolError(str(err)) from err
+        logger.info("query_kb %d rows truncated=%s", len(result.rows), result.truncated)
+        return result
 
 
 def _local_today(poi: Poi, clock: Clock) -> dt.date:
@@ -429,7 +489,13 @@ def _find_output(result: FindOpenResult) -> FindOpenOutput:
 
 # Claude Desktop 启动的就是这个 server：启动时读一次 data/pois/，数据有错就直接启动失败。
 # TRAVELKB_TODAY 只在评测的 mcp.json 里设；Desktop 配置里不设，行为不变
-mcp = build_server(load_pois(DATA_DIR), today=today_from_env(os.environ))
+# TRAVELKB_ENABLE_SQL 同理：只在 A2 组的 mcp.json 里设
+mcp = build_server(
+    load_pois(DATA_DIR),
+    today=today_from_env(os.environ),
+    city_names=load_city_names(CITIES_FILE),
+    sql_kb=sql_kb_from_env(os.environ, DEFAULT_DB_PATH),
+)
 
 
 def main() -> None:

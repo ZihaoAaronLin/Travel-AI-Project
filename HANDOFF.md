@@ -1,5 +1,35 @@
 # HANDOFF
 
+## 2026-11-13（续）· resolve_poi 回退 + 2e 实现；SOP 加冲突处理
+
+### 做了什么
+- Aaron 放行两批红测试（resolve_poi 回退 29 条、2e 54 条）→ 全部实现，tests/ 未改动，全部 369 条通过
+- resolve_poi 回退（core/resolve.py）：原词直接命中永远优先；NOT_FOUND 时先去掉开头认得的城市名，再按「的」拆；只认出一部分一律 AMBIGUOUS；ResolveResult 新增 matched_query，city 填实际用来过滤的城市；工具描述同步讲了 matched_query
+- data/cities.yaml：`Budapest: [布达佩斯]`（CC 起草的译名，随测试放行；英文名不用写，景点的 city 字段自动算一个叫法）；core/loader.py 新增 load_city_names
+- 2e：
+  - src/travelkb/sql/build.py：6 张表；写到临时文件再整个替换；例外用引擎自己的 days() 展开
+  - src/travelkb/sql/readonly.py：每次查询开新的只读连接，7 层防护；schema() 用不装 authorizer 的只读连接，参数化查列名
+  - server.py：TRAVELKB_ENABLE_SQL=1 才注册 query_kb / describe_schema；值写错或库文件不存在，启动即失败
+  - scripts/build_db.py：先跑校验，有 error 就不生成；build/ 已在 .gitignore
+- SOP 第 4 条加了「其他工具和 travel-kb 不一致时以 travel-kb 为准，并告诉用户有出入」；eval/groups/A3/system.md 同步重新生成
+- CLAUDE.md 常用命令：build_db.py 不再写「推迟到第 2 阶段」，改成实际用法
+
+### 容器里实测（真实 stdio、真实数据）
+- SQL 开：7 个工具；describe_schema 列出 6 张表；一条模型会写的三表 JOIN 查出美术博物馆周二 10:00–18:00、最后入场 17:00；DROP 返回工具错误，说明只能 SELECT
+- SQL 关：只有原来 5 个工具，调 query_kb 是 Unknown tool
+- TRAVELKB_ENABLE_SQL=yes：启动即报错
+- resolve_poi「布达佩斯的美术馆」：AMBIGUOUS 两家，matched_query「美术馆」，city「Budapest」
+
+### 对评测的影响
+- 回退只在原词 NOT_FOUND 时才走，pilot2 里模型传的查询都是直接命中，结论不受影响；但 resolve_poi 的工具描述变了（描述就是提示词），全量前 A3 / A4 再试跑一次
+- A2 组还没加进 evalkit：要改已审的 test_command 里的组清单（先问 Aaron），还要一份 A2 的 SOP（讲清表之间的优先级：exception_days 优先于 rules、没写的星期是 UNKNOWN、超出 valid 是 UNKNOWN）
+
+### 下一步
+1. Aaron：Desktop Project 指令同步 docs/SOP.md（加了第 4 条第 3 点）
+2. Aaron：2c 数据 + 15 条金标准；q11–q30；PREREG（q03 补城市暂缓）
+3. 定 A2 要不要进第一次基线：要的话 CC 先改组清单的测试给 Aaron 审，Aaron 写 A2 的 SOP
+4. 第 2 阶段 CC 这边的代码到此做完；之后是第 3 阶段经验库（要 Aaron 先从 Notion 导出四篇攻略）
+
 ## 2026-11-13 · Desktop 第 2 阶段验收通过；2e 红测试
 
 ### Desktop 第 2 阶段：通过（Aaron 截图）

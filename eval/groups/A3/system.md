@@ -19,6 +19,7 @@
 4. **强制溯源 (`source_url` & `verified_at`)**：
    - 每一个景点的结论都必须附带 `source_url`（官方链接）和 `verified_at`（核验日期）。
    - 工具返回的 `warnings`（如数据可能过期）必须转告用户。
+   - 其他工具（地图、网页等）给的营业时间和 travel-kb 不一致时，以 travel-kb 为准，并告诉用户两边有出入、请以官网为准。
 5. **整天排期闭环 (`check_day_plan`)**：
    - 第一步：对每一站调用 `resolve_poi` 拿齐 `poi_id`（遇 `AMBIGUOUS` 先向用户确认，遇 `NOT_FOUND` 单独摘出说明）。
    - 第二步：调用 `check_day_plan` 进行时间线校验。

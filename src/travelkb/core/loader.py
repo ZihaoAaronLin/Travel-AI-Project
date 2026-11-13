@@ -24,3 +24,17 @@ def load_poi_file(path: Path) -> Poi:
     if poi.id != path.stem:
         raise ValueError(f"{path.name}: id {poi.id!r} 和文件名不一致")
     return poi
+
+
+def load_city_names(path: Path) -> dict[str, list[str]]:
+    """读 data/cities.yaml：{城市英文名: [其他叫法]}。resolve_poi 回退时用来认出「布达佩斯的…」。"""
+    data = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
+    if not isinstance(data, dict) or not all(_is_name_list(v) for v in data.values()):
+        raise ValueError(
+            f"{Path(path).name}: 格式应为「城市英文名: [其他叫法, …]」，叫法都要是字符串"
+        )
+    return {str(city): list(names) for city, names in data.items()}
+
+
+def _is_name_list(value) -> bool:
+    return isinstance(value, list) and all(isinstance(name, str) for name in value)
