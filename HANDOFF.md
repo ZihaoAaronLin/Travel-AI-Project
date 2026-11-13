@@ -1,5 +1,17 @@
 # HANDOFF
 
+## 2026-11-13（续三）· PREREG 方法定稿 + 验证性分析的红测试
+
+### 做了什么
+- Aaron「都按建议」：PREREG 里的【待定】全部落定（按题分析、两遍错一遍就算错、Holm、q01–q04 另做敏感性分析且不一致时以它为准、H5 题型清单、模型 claude-opus-5-5）。状态仍是「未冻结」：等题库和分析代码
+- tests/evalkit/test_analysis.py（17 条，红，等 Aaron 审）：按题汇总、配对计数、Holm、三条假设的定义和 PREREG 对齐、H1 / H5 / H3 各自的口径、方向相反不算支持、没跑的组占 Holm 名额、去掉 q01–q04 的敏感性分析
+- 关键数字钉进了测试：7:0 才能在 Holm 下支持 H1，6:0 不够
+
+### 下一步
+1. Aaron：审 test_analysis.py（重点：「没跑的组也占 Holm 名额」这一条是 CC 加的口径）
+2. CC：放行后实现 evalkit/analysis.py，score.py 加「验证性检验」一节（全部题 + 去掉 q01–q04 两张表）
+3. Aaron：2c、15 条金标准、q11–q30；然后冻结 PREREG、跑全量
+
 ## 2026-11-13（续二）· PREREG 草稿
 
 ### 做了什么
