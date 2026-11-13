@@ -201,7 +201,7 @@ CLAUDE.md 模板（第 0 阶段原样交给 CC）：
 **2026-10-10 Aaron 定的顺序**（先做产品核心，再做对照实验；每步都能单独演示）：
 - 2a 引擎补全：例外三选一写法（date / dates / rrule + valid）；去不了时给 next_open_date；核验超过 14 天加 STALE 提醒（结论不变）
 - 2b check_day_plan + find_open_pois：问题逐条带修复建议（改时间 / 改到 next_open_date / 换替代），模型逐一修完再验，直到没有 BLOCKER。不算路上时间，但两站之间至少留 10 分钟缓冲（Aaron 2026-10-10）；级别表和 fix 取值见 tests/unit/test_day_plan.py
-- 2c 数据扩到约 20 个景点 + 15 条金标准（Aaron；同名撞车组的金标准一并补）
+- 2c 数据扩到约 20 个景点 + 15 条金标准（Aaron；同名撞车组的金标准一并补）——2026-11-13：Aaron 给的是维也纳、布拉格、米兰、巴黎的 14 个景点，多城市提前到这一步；CC 起草了 data/drafts/、15 条金标准骨架和 q11–q30，待 Aaron 核对
 - 2d 题库 30 题 + 评测脚本，跑 A0、A6 基线
 - 2e query_kb + build_db（只服务 A2，时间紧就砍）——2026-11-13 完成；另加了一层「不返回结果列的语句一律拒绝」
 - 预约须提前到（arrive_early_min）推迟到第 4 阶段（布达佩斯没有真实例子）

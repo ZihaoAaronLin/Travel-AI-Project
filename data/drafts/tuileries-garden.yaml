@@ -1,0 +1,22 @@
+# 来源原文：data/sources/2026-11-13-official-pages.md（杜乐丽花园）
+# CC 2026-11-13 按 Aaron 复制的原文起草，待 Aaron 对照官网核对
+# 有效期内（11/13–2/11）都在「January, February, March, November and December」这一档
+id: tuileries-garden
+city: Paris
+country: FR
+tz: Europe/Paris
+category: park
+status: OPEN
+review: draft
+names: {local: Jardin des Tuileries, en: Tuileries Garden, zh: 杜乐丽花园}
+aliases: [杜伊勒里花园, Tuileries]
+rules:
+  # 原文：7:30 a.m. to 7:30 p.m. / January, February, March, November and December
+  - id: r1
+    valid: [2026-11-13, 2027-02-11]
+    days: [MON, TUE, WED, THU, FRI, SAT, SUN]
+    open: "07:30"
+    close: "19:30"
+exceptions: []
+source_url: https://www.louvre.fr/en/visit/hours-admission?tab=tuileries-garden#when-to-visit
+verified_at: 2026-11-13

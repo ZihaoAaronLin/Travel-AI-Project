@@ -1,5 +1,40 @@
 # HANDOFF
 
+## 2026-11-13（续五）· 2c 草稿：14 个新景点、15 条金标准骨架、q11–q30
+
+### 做了什么
+- Aaron 上传 Word 文档（14 个景点：维也纳 6、布拉格 1、米兰 2、巴黎 5）→ 原文原样存进 data/sources/2026-11-13-official-pages.md
+- **data/drafts/**：14 个 YAML，全部 review: draft，每条规则上面引了原文。server 只读 data/pois/，草稿不会被 Desktop 用到；
+  如果直接放进 data/pois/，「真实数据零 warning」的测试会红，Desktop 还会拿没核对的时间回答
+- data/cities.yaml 加了维也纳、布拉格、米兰、巴黎（译名，待 Aaron 确认）
+- scripts/validate_data.py 可以传目录：`uv run python scripts/validate_data.py data/pois data/drafts`。26 个景点 error 0；warning 14 全是「未核对」
+- tests/golden/cases.yaml 加 g11–g25 骨架（expect 留空，跑测试时跳过）：换季 / 延长开放 / 节假日 / 最后入场，加上四组同名（美景宫、渔人堡、沃伊达奇城堡、圣史蒂芬大教堂）
+- eval/questions.yaml 填满 30 题：q11–q30 是 CC 起草的，gold 也是草稿（gold_checked_at 为 null）；原计划的两道每月循环题并入例外日
+- PREREG 第 8 节写明「q11–q30 由系统作者起草」以及缓解办法；第 9 节加了冻结前必须满足的条件
+
+### 草稿里需要 Aaron 定的（各文件开头都有「待核」）
+1. 美泉宫：表格复制后丢了结构，CC 理解为平时 8:30–17:00、列出的延长日 8:30–17:30。q17、q18、g11、g12 都靠这个
+2. 艺术史博物馆（重要）：原文「Open daily」，但节假日表专门列出两个周一，Aaron 早先的笔记又写「9–5 月周一闭」。周一暂不写规则，引擎答 UNKNOWN
+3. 卢浮宫（重要）：摘录里没有节假日闭馆，不补的话 12/25 会答开放
+4. 奥塞：只复制到「今天」一天的时间，rules 留空，需要完整的每周时间
+5. 橘园：周五夜场的最后入场没写，周五 20:30 到会被判能进
+6. 德拉克洛瓦：原文没写周二，周二答 UNKNOWN
+7. 二十世纪博物馆：标题是「Table with entry times」，是开放时段还是入场时段
+8. 美景宫21：周一闭馆是 CC 按奥地利假日表推断的（窗口内没有落在周一的假日）
+9. 霍夫堡：官网是皇家珍宝馆，没把「霍夫堡」设成别名（霍夫堡还有茜茜博物馆等，时间不同）
+10. 穆夏美术馆：摘录没写城市，按布拉格填
+11. 核验日：按上传当天 2026-11-13 记，有效期到 2027-02-11
+
+### 下一步（Aaron）
+1. 按上面 11 条逐个对照官网，改草稿；对的把 review 改成 verified，`git mv data/drafts/<文件> data/pois/`
+2. 每移一个跑 `uv run python scripts/validate_data.py` 和 `uv run pytest`
+3. 填 g11–g25 的 expect（先移数据再填，否则找不到 poi_id）
+4. q11–q30：打开 gold_sources 的官网重新核对 gold，填 gold_checked_at，存 Wayback 链接到 gold_archive（q01–q10 也要补存档）
+5. 全部满足 PREREG 第 9 节的冻结条件 → 填预测表、改「已冻结」、commit → 跑 baseline-1
+
+### CC 待办
+- score.py 加一张按出题人（q01–q10 / q11–q30）拆分的描述性答错率表（PREREG 第 8 节写了，还没实现）
+
 ## 2026-11-13（续四）· 验证性分析实现；基线还不能跑
 
 ### 做了什么

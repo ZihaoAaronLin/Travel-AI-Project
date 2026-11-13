@@ -121,3 +121,159 @@
   note: 不开，十一月到十二月下午四点就关门了
   source_url: https://www.parlament.hu/web/visitors/opening-hours
   checked_at: 2026-10-10
+
+# ---- 2c：g11–g25 骨架（CC 2026-11-13 起草：只写了问题、调用、去哪查；expect 留给 Aaron 回官网核对后填）----
+# 维也纳 / 布拉格 / 米兰 / 巴黎的景点还在 data/drafts/：先核对数据、移进 data/pois/，再填这里的 expect，
+# 否则填了 expect 的题会因为找不到 poi_id 而失败。
+# 日期速查：11-16 周一，11-17 周二，11-18 周三，11-20 周五，12-04 周五，12-05 周六，
+#           12-21 周一，12-24 周四，12-25 周五
+
+- id: g11
+  type: exception_changed_hours
+  question: 2026-12-04（周五）17:15 到美泉宫，还开着吗？
+  call: {tool: is_open, args: {poi_id: schonbrunn-palace, date: 2026-12-04, time: "17:15"}}
+  check: https://www.schoenbrunn.at/en/visitor-information/opening-times（12/4 不在延长开放的日子里）
+  expect: null
+  note: null
+  source_url: null
+  checked_at: null
+
+- id: g12
+  type: exception_changed_hours
+  question: 2026-12-05（周六）17:15 到美泉宫，还开着吗？
+  call: {tool: is_open, args: {poi_id: schonbrunn-palace, date: 2026-12-05, time: "17:15"}}
+  check: 同上（12/5 是延长开放的第一天）
+  expect: null
+  note: null
+  source_url: null
+  checked_at: null
+
+- id: g13
+  type: exception_changed_hours
+  question: 2026-12-21（周一）去艺术史博物馆，开门吗？
+  call: {tool: is_open, args: {poi_id: kunsthistorisches-museum, date: 2026-12-21}}
+  check: https://www.khm.at/en/visit 的 Opening days on public holidays
+  expect: null
+  note: null
+  source_url: null
+  checked_at: null
+
+- id: g14
+  type: exception_changed_hours
+  question: 2026-12-24（周四）15:30 到艺术史博物馆，还开着吗？
+  call: {tool: is_open, args: {poi_id: kunsthistorisches-museum, date: 2026-12-24, time: "15:30"}}
+  check: 同上（平安夜的时段）
+  expect: null
+  note: null
+  source_url: null
+  checked_at: null
+
+- id: g15
+  type: weekly_closed
+  question: 2026-11-16（周一）去艺术史博物馆，开门吗？
+  call: {tool: is_open, args: {poi_id: kunsthistorisches-museum, date: 2026-11-16}}
+  check: 同上——草稿里周一没写规则（原文「Open daily」和节假日表矛盾），先看官网到底周一开不开
+  expect: null
+  note: null
+  source_url: null
+  checked_at: null
+
+- id: g16
+  type: weekly_closed
+  question: 2026-11-17（周二）去霍夫堡皇家珍宝馆，开门吗？
+  call: {tool: is_open, args: {poi_id: imperial-treasury-vienna, date: 2026-11-17}}
+  check: https://www.kaiserliche-schatzkammer.at/en/visit/visitors-information/entrance-fees/
+  expect: null
+  note: null
+  source_url: null
+  checked_at: null
+
+- id: g17
+  type: after_last_entry
+  question: 2026-11-18（周三）17:10 到霍夫堡皇家珍宝馆，还能进吗？
+  call: {tool: is_open, args: {poi_id: imperial-treasury-vienna, date: 2026-11-18, time: "17:10"}}
+  check: 同上（最后入场是关门前 30 分钟）
+  expect: null
+  note: null
+  source_url: null
+  checked_at: null
+
+- id: g18
+  type: exception_closed
+  question: 2026-12-24（周四）去布拉格的穆夏美术馆，开门吗？
+  call: {tool: is_open, args: {poi_id: mucha-museum, date: 2026-12-24}}
+  check: https://mucha.eu/en#visit-us
+  expect: null
+  note: null
+  source_url: null
+  checked_at: null
+
+- id: g19
+  type: exception_changed_hours
+  question: 2026-12-25（周五）16:30 到穆夏美术馆，还开着吗？
+  call: {tool: is_open, args: {poi_id: mucha-museum, date: 2026-12-25, time: "16:30"}}
+  check: 同上（12/25 缩短开放）
+  expect: null
+  note: null
+  source_url: null
+  checked_at: null
+
+- id: g20
+  type: exception_closed
+  question: 2026-12-25（周五）去米兰布雷拉画廊，开门吗？
+  call: {tool: is_open, args: {poi_id: pinacoteca-di-brera, date: 2026-12-25}}
+  check: https://pinacotecabrera.org/en/visit/orari/
+  expect: null
+  note: null
+  source_url: null
+  checked_at: null
+
+- id: g21
+  type: after_last_entry
+  question: 2026-11-20（周五）20:30 到巴黎橘园美术馆，还能进吗？
+  call: {tool: is_open, args: {poi_id: musee-de-l-orangerie, date: 2026-11-20, time: "20:30"}}
+  check: https://www.musee-orangerie.fr/en/visit-orangerie——周五夜场的最后入场时间，草稿里没有
+  expect: null
+  note: null
+  source_url: null
+  checked_at: null
+
+- id: g22
+  type: same_name_in_city
+  question: 维也纳的「美景宫」是哪一个？
+  call: {tool: resolve_poi, args: {query: 美景宫, city: Vienna}}
+  check: 上美景宫、下美景宫开放时间不同（9 点 / 10 点开），不能自动挑
+  expect: null
+  note: null
+  source_url: null
+  checked_at: null
+
+- id: g23
+  type: same_name_in_city
+  question: 布达佩斯的「渔人堡」是哪一个？
+  call: {tool: resolve_poi, args: {query: 渔人堡, city: Budapest}}
+  check: 收费观景台和免费区域是两回事
+  expect: null
+  note: null
+  source_url: null
+  checked_at: null
+
+- id: g24
+  type: same_name_in_city
+  question: 布达佩斯的「沃伊达奇城堡」是哪一个？
+  call: {tool: resolve_poi, args: {query: 沃伊达奇城堡, city: Budapest}}
+  check: 农业博物馆和城堡庭院是两回事
+  expect: null
+  note: null
+  source_url: null
+  checked_at: null
+
+- id: g25
+  type: same_name_in_city
+  question: 布达佩斯的「圣史蒂芬大教堂」是哪一个？
+  call: {tool: resolve_poi, args: {query: 圣史蒂芬大教堂, city: Budapest}}
+  check: 教堂大厅和观景台与珍宝馆是两回事
+  expect: null
+  note: null
+  source_url: null
+  checked_at: null

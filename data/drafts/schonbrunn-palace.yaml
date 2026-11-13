@@ -1,0 +1,31 @@
+# 来源原文：data/sources/2026-11-13-official-pages.md（美泉宫）
+# CC 2026-11-13 按 Aaron 复制的原文起草，待 Aaron 对照官网核对
+# 待核 1：原文的表格复制后丢了结构，只剩两行「8.30 am–5.00 pm」「8.30 am–5.30 pm」。
+#   CC 理解为：11/3–3/31 平时 8:30–17:00；列出的「Extended opening hours」那几天 8:30–17:30
+# 待核 2：官网没写最后入场 → 不填 last_entry
+# 有效期 = 核验日起 90 天（原文 3 November to 31 March，截到 2027-02-11）
+id: schonbrunn-palace
+city: Vienna
+country: AT
+tz: Europe/Vienna
+category: palace
+status: OPEN
+review: draft
+names: {local: Schloss Schönbrunn, en: Schönbrunn Palace, zh: 美泉宫}
+aliases: [申布伦宫, Schönbrunn]
+rules:
+  # 原文：Schönbrunn Palace is open daily, including public holidays! / 3 November to 31 March / 8.30 am–5.00 pm
+  - id: r1
+    valid: [2026-11-13, 2027-02-11]
+    days: [MON, TUE, WED, THU, FRI, SAT, SUN]
+    open: "08:30"
+    close: "17:00"
+exceptions:
+  # 原文：Extended opening hours on the following dates: 5–8 December 2026 | 12 and 13 December 2026 |
+  #       19 and 20 December 2026 | 25 December 2026 – 6 January 2027 / 8.30 am–5.30 pm
+  - {id: e1, dates: [2026-12-05, 2026-12-08], open: "08:30", close: "17:30", reason: 延长开放}
+  - {id: e2, dates: [2026-12-12, 2026-12-13], open: "08:30", close: "17:30", reason: 延长开放}
+  - {id: e3, dates: [2026-12-19, 2026-12-20], open: "08:30", close: "17:30", reason: 延长开放}
+  - {id: e4, dates: [2026-12-25, 2027-01-06], open: "08:30", close: "17:30", reason: 延长开放}
+source_url: https://www.schoenbrunn.at/en/visitor-information/opening-times
+verified_at: 2026-11-13

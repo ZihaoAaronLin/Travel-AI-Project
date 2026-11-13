@@ -1,0 +1,41 @@
+# 来源原文：data/sources/2026-11-13-official-pages.md（艺术史博物馆）
+# CC 2026-11-13 按 Aaron 复制的原文起草，待 Aaron 对照官网核对
+# 待核 1（重要）：原文写「Open daily」，但节假日表里专门列出了 12/21、12/28 两个周一；
+#   Aaron 早先的笔记写「KHM 8 月周一开、9–5 月周一闭」。两者矛盾 → 周一暂不写规则，
+#   引擎对普通周一答 UNKNOWN（没写的星期既不当开、也不当闭）。请 Aaron 对照官网定
+# 待核 2：「Clearing of rooms is 15 minutes before closing」是清场，不是最后入场 → 不填 last_entry
+id: kunsthistorisches-museum
+city: Vienna
+country: AT
+tz: Europe/Vienna
+category: museum
+status: OPEN
+review: draft
+names: {local: Kunsthistorisches Museum Wien, en: Kunsthistorisches Museum Vienna, zh: 艺术史博物馆}
+aliases: [维也纳艺术史博物馆, KHM]
+rules:
+  # 原文：Open daily, 10 a.m. - 6 p.m.（周一见待核 1）
+  - id: r1
+    valid: [2026-11-13, 2027-02-11]
+    days: [TUE, WED, FRI, SAT, SUN]
+    open: "10:00"
+    close: "18:00"
+  # 原文：Thu until 9 pm
+  - id: r2
+    valid: [2026-11-13, 2027-02-11]
+    days: [THU]
+    open: "10:00"
+    close: "21:00"
+exceptions:
+  # 原文：Opening days on public holidays（下面每条都是原文的日期和时段，年份原文写明了）
+  - {id: e1, date: 2026-11-15, open: "10:00", close: "18:00", reason: Saint Leopold}
+  - {id: e2, date: 2026-12-06, open: "10:00", close: "18:00", reason: Saint Nicholas}
+  - {id: e3, date: 2026-12-08, open: "10:00", close: "18:00", reason: Conception of Mary}
+  - {id: e4, dates: [2026-12-21, 2026-12-23], open: "10:00", close: "18:00", reason: 圣诞期间}
+  - {id: e5, date: 2026-12-24, open: "10:00", close: "15:00", reason: 平安夜提前关门}
+  - {id: e6, dates: [2026-12-25, 2026-12-28], open: "10:00", close: "18:00", reason: 圣诞期间}
+  - {id: e7, date: 2026-12-31, open: "10:00", close: "21:00", reason: New Year's Eve}
+  - {id: e8, date: 2027-01-01, open: "10:00", close: "18:00", reason: New Year's}
+  - {id: e9, date: 2027-01-06, open: "10:00", close: "18:00", reason: Epiphany}
+source_url: https://www.khm.at/en/visit
+verified_at: 2026-11-13

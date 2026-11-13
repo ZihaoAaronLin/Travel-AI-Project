@@ -1,0 +1,36 @@
+# 来源原文：data/sources/2026-11-13-official-pages.md（21）
+# CC 2026-11-13 按 Aaron 复制的原文起草，待 Aaron 对照官网核对
+# 待核 1：原文「(Open Mondays on holidays.)」——平时周一闭馆，节假日的周一开。
+#   有效期内（11/13–2/11）奥地利的法定假日（12/8、12/25、12/26、1/1、1/6）都不落在周一，
+#   所以 r3 写成周一闭馆。这一条是 CC 按假日表推断的，不是官网原文，请 Aaron 核
+# 待核 2：中文名 Aaron 只写了「21」，CC 暂写「美景宫21」
+id: belvedere-21
+city: Vienna
+country: AT
+tz: Europe/Vienna
+category: museum
+status: OPEN
+review: draft
+names: {local: Belvedere 21, en: Belvedere 21, zh: 美景宫21}
+aliases: []
+rules:
+  # 原文：Tuesday to Sunday / 11 am to 6 pm
+  - id: r1
+    valid: [2026-11-13, 2027-02-11]
+    days: [TUE, WED, FRI, SAT, SUN]
+    open: "11:00"
+    close: "18:00"
+  # 原文：Late Night: Thursday / 11 am to 9 pm
+  - id: r2
+    valid: [2026-11-13, 2027-02-11]
+    days: [THU]
+    open: "11:00"
+    close: "21:00"
+  # 原文只写了 Tuesday to Sunday，加注「节假日的周一开」→ 平时周一闭馆（见待核 1）
+  - id: r3
+    valid: [2026-11-13, 2027-02-11]
+    days: [MON]
+    closed: true
+exceptions: []
+source_url: https://www.belvedere.at/en/visit
+verified_at: 2026-11-13

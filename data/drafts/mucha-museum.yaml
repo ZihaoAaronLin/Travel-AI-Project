@@ -1,0 +1,28 @@
+# 来源原文：data/sources/2026-11-13-official-pages.md（穆夏美术馆）
+# CC 2026-11-13 按 Aaron 复制的原文起草，待 Aaron 对照官网核对
+# 待核 1：摘录里没写地址，城市按 CC 的了解填布拉格，请 Aaron 核
+# 待核 2：节假日的日期原文没写年份（「24. 12.」），按有效期内的 2026 年记
+id: mucha-museum
+city: Prague
+country: CZ
+tz: Europe/Prague
+category: museum
+status: OPEN
+review: draft
+names: {local: Muchovo muzeum, en: Mucha Museum, zh: 穆夏美术馆}
+aliases: [慕夏美术馆, 穆夏博物馆]
+rules:
+  # 原文：OPENING HOURS DAILY 10:00–18:00
+  - id: r1
+    valid: [2026-11-13, 2027-02-11]
+    days: [MON, TUE, WED, THU, FRI, SAT, SUN]
+    open: "10:00"
+    close: "18:00"
+exceptions:
+  # 原文：Closed on this day only – 24. 12.
+  - {id: e1, date: 2026-12-24, closed: true, reason: 12 月 24 日闭馆}
+  # 原文：Reduced opening hours on these days: 25, 26 and 31 December / 10:00–16:00
+  - {id: e2, dates: [2026-12-25, 2026-12-26], open: "10:00", close: "16:00", reason: 节日缩短开放}
+  - {id: e3, date: 2026-12-31, open: "10:00", close: "16:00", reason: 节日缩短开放}
+source_url: https://mucha.eu/en#visit-us
+verified_at: 2026-11-13

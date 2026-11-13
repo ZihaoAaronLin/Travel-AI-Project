@@ -66,7 +66,8 @@
 - 模型：claude-opus-5-5（和 Claude Desktop 里用的同一个）
 - 运行方式：Aaron 本机，Claude 订阅，不加 --bare；跑之前清掉 ~/.claude/CLAUDE.md 里和旅行有关的内容
 - Claude Code 版本：跑的时候记进 meta.jsonl（试跑时是 2.1.311）
-- 题数 30（eval/questions.yaml 冻结时的内容），每题每组跑 2 遍，共 30 × 4 × 2 = 240 次
+- 题数 30（eval/questions.yaml 冻结时的内容），覆盖布达佩斯、维也纳、布拉格、米兰、巴黎五座城；
+  每题每组跑 2 遍，共 30 × 4 × 2 = 240 次
 - 题型配比按 eval/DESIGN.md 第 2 节；每题 gold 回官网独立核对，存 Wayback 链接
 
 ## 7. 什么不算、什么要排除
@@ -82,7 +83,10 @@
   第二次试跑 q01–q04 才全对。这四题对 A3 不是「没见过的题」。
   处理：主分析照常用全部 30 题，另报一次去掉 q01–q04 的结果（各自做 Holm 校正）；两个结论不一致时以去掉后的为准
 - **H5 的题型清单**：season_boundary、monthly_rule、exception_closed、exception_changed_hours、
-  same_name_in_city。如果 2c 找不到真实的每月循环景点，monthly_rule 的题并入 exception_closed，清单不变
+  same_name_in_city。2c 没有找到真实的每月循环景点，原计划的两道 monthly_rule 题已并入例外日，清单不变
+- **q11–q30 是 CC 起草的**：CC 同时写了系统（工具、SOP 的修改），知道系统的弱点在哪，出题可能无意中避开它们。
+  缓解：题型按 DESIGN 的配比分配；gold 由 Aaron 打开官网重新核对（不看 YAML、不看原文摘录）并存档；
+  报告里把 q01–q10（Aaron 出题）和 q11–q30（CC 出题）的答错率分开列出（描述性，不做检验）
 - **数据比题目新**：2c 新增景点的核验日期会晚于部分题目的 today。新题的 today 不早于对应景点的核验日期
 - **金标准出错的可能**：每题 gold 由 Aaron 独立核对官网并存档。跑完后发现 gold 错了，改正它、在第 10 节记一笔，
   并同时报告改正前后的数字
@@ -95,6 +99,9 @@
 - eval/groups/ 下的系统提示，以及 docs/SOP.md
 - data/ 下的全部数据
 - src/ 下的全部代码
+
+冻结前必须满足：data/drafts/ 里的景点全部核对完、移进 data/pois/、review 改成 verified；
+questions.yaml 每题的 gold_checked_at 和 gold_archive 都不是 null；validate_data 零 error、零 warning。
 
 核对办法：跑完后执行 `git diff <冻结点> HEAD -- . ':!eval/runs' ':!eval/PREREG.md'`，输出应为空；
 每次运行 meta.jsonl 里的 git_commit 都应该是冻结点或它之后只改了 eval/runs/ 的 commit，git_dirty 为 false。

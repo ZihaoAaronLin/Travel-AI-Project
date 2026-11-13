@@ -1,0 +1,30 @@
+# 来源原文：data/sources/2026-11-13-official-pages.md（霍夫堡）
+# CC 2026-11-13 按 Aaron 复制的原文起草，待 Aaron 对照官网核对
+# 待核：官网是「皇家珍宝馆」（kaiserliche-schatzkammer.at），只是霍夫堡里的一处。
+#   霍夫堡还有茜茜博物馆、皇家公寓等，开放时间不同 → 不把「霍夫堡」设成别名，
+#   否则问「霍夫堡几点开」会被当成珍宝馆直接回答。代价：「霍夫堡的珍宝馆」查不到，要说「皇家珍宝馆」
+id: imperial-treasury-vienna
+city: Vienna
+country: AT
+tz: Europe/Vienna
+category: museum
+status: OPEN
+review: draft
+names: {local: Kaiserliche Schatzkammer Wien, en: Imperial Treasury Vienna, zh: 霍夫堡皇家珍宝馆}
+aliases: [皇家珍宝馆, 珍宝馆, Imperial Treasury, Schatzkammer]
+rules:
+  # 原文：Open daily, except for Tuesday, from 9 a.m. – 5:30 p.m.
+  #       Admission possible up to 30 minutes before the museum closes
+  - id: r1
+    valid: [2026-11-13, 2027-02-11]
+    days: [MON, WED, THU, FRI, SAT, SUN]
+    open: "09:00"
+    close: "17:30"
+    last_entry: "17:00"
+  - id: r2
+    valid: [2026-11-13, 2027-02-11]
+    days: [TUE]
+    closed: true
+exceptions: []
+source_url: https://www.kaiserliche-schatzkammer.at/en/visit/visitors-information/entrance-fees/
+verified_at: 2026-11-13

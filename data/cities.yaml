@@ -1,4 +1,10 @@
 # 城市的其他叫法：resolve_poi 回退时用来认出「布达佩斯的美术馆」「布达佩斯圣史蒂芬大教堂」开头的城市名。
 # 键要和景点 YAML 里的 city 字段完全一致（英文）；英文名本身不用再写，自动算一个叫法。
-# 这是译名，不是营业事实，不需要官网来源。CC 2026-11-13 起草，Aaron 随测试一起放行。
+# 这是译名，不是营业事实，不需要官网来源。
+# Budapest：CC 2026-11-13 起草，Aaron 随测试一起放行
+# Vienna / Prague / Milan / Paris：CC 2026-11-13 随 2c 草稿起草，待 Aaron 确认
 Budapest: [布达佩斯]
+Vienna: [维也纳, Wien]
+Prague: [布拉格, Praha]
+Milan: [米兰, Milano]
+Paris: [巴黎]

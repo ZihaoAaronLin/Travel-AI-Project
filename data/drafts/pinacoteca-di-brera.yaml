@@ -1,0 +1,30 @@
+# 来源原文：data/sources/2026-11-13-official-pages.md（布雷拉画廊）
+# CC 2026-11-13 按 Aaron 复制的原文起草，待 Aaron 对照官网核对
+id: pinacoteca-di-brera
+city: Milan
+country: IT
+tz: Europe/Rome
+category: museum
+status: OPEN
+review: draft
+names: {local: Pinacoteca di Brera, en: Pinacoteca di Brera, zh: 布雷拉画廊}
+aliases: [布雷拉美术馆, Brera]
+rules:
+  # 原文：Tuesday – Wednesday – Thursday – Friday – Saturday – Sunday / 8.30am – 7.15pm (last entrance at 6pm)
+  - id: r1
+    valid: [2026-11-13, 2027-02-11]
+    days: [TUE, WED, THU, FRI, SAT, SUN]
+    open: "08:30"
+    close: "19:15"
+    last_entry: "18:00"
+  # 原文：Closed: every Monday
+  - id: r2
+    valid: [2026-11-13, 2027-02-11]
+    days: [MON]
+    closed: true
+exceptions:
+  # 原文：Closed: … December 25th, January 1st（May 1st 在有效期外）
+  - {id: e1, date: 2026-12-25, closed: true, reason: 12 月 25 日闭馆}
+  - {id: e2, date: 2027-01-01, closed: true, reason: 1 月 1 日闭馆}
+source_url: https://pinacotecabrera.org/en/visit/orari/
+verified_at: 2026-11-13

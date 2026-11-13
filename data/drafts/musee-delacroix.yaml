@@ -1,0 +1,29 @@
+# 来源原文：data/sources/2026-11-13-official-pages.md（德拉克洛瓦美术馆）
+# CC 2026-11-13 按 Aaron 复制的原文起草，待 Aaron 对照官网核对
+# 待核：原文只列了周一、周三到周日，没写周二。周二不写规则 → 引擎答 UNKNOWN，不当成闭馆。
+#   请 Aaron 在官网确认周二是不是闭馆
+id: musee-delacroix
+city: Paris
+country: FR
+tz: Europe/Paris
+category: museum
+status: OPEN
+review: draft
+names: {local: Musée national Eugène-Delacroix, en: Musée national Eugène-Delacroix, zh: 德拉克洛瓦美术馆}
+aliases: [德拉克洛瓦博物馆, Delacroix]
+rules:
+  # 原文：12:00 p.m. to 5:30 p.m. / Monday, Wednesday, Thursday, Friday
+  - id: r1
+    valid: [2026-11-13, 2027-02-11]
+    days: [MON, WED, THU, FRI]
+    open: "12:00"
+    close: "17:30"
+  # 原文：10:00 a.m. to 5:30 p.m. / Saturday and Sunday
+  - id: r2
+    valid: [2026-11-13, 2027-02-11]
+    days: [SAT, SUN]
+    open: "10:00"
+    close: "17:30"
+exceptions: []
+source_url: https://www.louvre.fr/en/visit/hours-admission?tab=musee-national-eugene-delacroix#when-to-visit
+verified_at: 2026-11-13

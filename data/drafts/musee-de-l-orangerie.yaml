@@ -1,0 +1,39 @@
+# 来源原文：data/sources/2026-11-13-official-pages.md（橘园美术馆）
+# CC 2026-11-13 按 Aaron 复制的原文起草，待 Aaron 对照官网核对
+# 待核：「Last admission at 5:15 p.m.」只对应 18:00 关门的日子；周五开到 21:00（「* Exceptional schedules
+#   on every Friday」），周五的最后入场原文没写 → 周五不填 last_entry。
+#   风险：周五 20:30 到，引擎会答能进（只按 21:00 关门判断）。请 Aaron 查周五的最后入场
+# 「closing of the galleries at 5:45 p.m.」是展厅清场，不单独建模
+id: musee-de-l-orangerie
+city: Paris
+country: FR
+tz: Europe/Paris
+category: museum
+status: OPEN
+review: draft
+names: {local: "Musée de l'Orangerie", en: "Musée de l'Orangerie", zh: 橘园美术馆}
+aliases: [橘园, Orangerie]
+rules:
+  # 原文：Monday / Wednesday / Thursday / Saturday / Sunday 9.00am 6.00pm；Last admission at 5:15 p.m.
+  - id: r1
+    valid: [2026-11-13, 2027-02-11]
+    days: [MON, WED, THU, SAT, SUN]
+    open: "09:00"
+    close: "18:00"
+    last_entry: "17:15"
+  # 原文：Friday 9.00am 9.00pm*（见上面的待核）
+  - id: r2
+    valid: [2026-11-13, 2027-02-11]
+    days: [FRI]
+    open: "09:00"
+    close: "21:00"
+  # 原文：Tuesday Closed / Closed every Tuesday
+  - id: r3
+    valid: [2026-11-13, 2027-02-11]
+    days: [TUE]
+    closed: true
+exceptions:
+  # 原文：Closed every Tuesday, May 1, the morning of July 14, and December 25.（5/1、7/14 在有效期外）
+  - {id: e1, date: 2026-12-25, closed: true, reason: 12 月 25 日闭馆}
+source_url: https://www.musee-orangerie.fr/en/visit-orangerie#anchor-navigation-1
+verified_at: 2026-11-13

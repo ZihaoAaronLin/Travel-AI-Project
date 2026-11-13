@@ -1,0 +1,35 @@
+# 来源原文：data/sources/2026-11-13-official-pages.md（二十世纪博物馆）
+# CC 2026-11-13 按 Aaron 复制的原文起草，待 Aaron 对照官网核对
+# 待核 1：原文标题是「Table with entry times」——这些时间是开放时段还是入场时段？
+#   CC 暂按开放时段写，不填 last_entry
+# 待核 2：原文没写节假日（12/25、1/1 等）→ 按每周规则
+id: museo-del-novecento
+city: Milan
+country: IT
+tz: Europe/Rome
+category: museum
+status: OPEN
+review: draft
+names: {local: Museo del Novecento, en: Museo del Novecento, zh: 二十世纪博物馆}
+aliases: [Novecento]
+rules:
+  # 原文：Tuesday / Wednesday / Friday / Saturday / Sunday 10:00 - 19:30
+  - id: r1
+    valid: [2026-11-13, 2027-02-11]
+    days: [TUE, WED, FRI, SAT, SUN]
+    open: "10:00"
+    close: "19:30"
+  # 原文：Thursday 10:00 - 22:30
+  - id: r2
+    valid: [2026-11-13, 2027-02-11]
+    days: [THU]
+    open: "10:00"
+    close: "22:30"
+  # 原文：Monday CLOSED
+  - id: r3
+    valid: [2026-11-13, 2027-02-11]
+    days: [MON]
+    closed: true
+exceptions: []
+source_url: https://www.museodelnovecento.org/
+verified_at: 2026-11-13
