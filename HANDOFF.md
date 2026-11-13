@@ -1,5 +1,25 @@
 # HANDOFF
 
+## 2026-11-13（续二）· PREREG 草稿
+
+### 做了什么
+- eval/PREREG.md 草稿：主指标、三条验证性假设（H1 / H5 / H3）、统计方法、各组配置、模型和规模、排除规则、已知偏差、冻结清单、偏离记录、预测表
+- 已经定过的都填好了（组、reps、订阅、钉今天、harness 错误不进分母、no_verdict 占分母不算错）
+- 用项目自己的 mcnemar_exact 核过检验力：不校正要 6:0（p = 0.031），Holm 校正后最严的一条要 7:0（p = 0.016）
+
+### 待 Aaron 定（文件里标了【待定】，括号是 CC 的建议）
+1. 分析单位（按题；两遍里错一遍就算这题错）
+2. 多重比较（Holm）
+3. q01–q04 调过 SOP 的处理（主分析用全部 30 题，另报去掉这四题的结果，不一致时以去掉后的为准）
+4. H5 的题型清单（season_boundary、monthly_rule、exception_closed、exception_changed_hours、same_name_in_city）
+5. 模型 ID 在 Desktop 里再确认一次（claude-opus-5-5）
+6. 预测表（可选）
+
+### 冻结前还差
+- score.py 按 PREREG 第 4 节实现：按题汇总、H3 合规的 McNemar、H5 子集。现在的 score.py 按「题 × 遍」配对。CC 等第 1、3、4 条定了再写测试
+- 2c 数据、15 条金标准、q11–q30（Aaron 在做）
+- 全部齐了：PREREG 状态改「已冻结」并 commit，然后全量
+
 ## 2026-11-13（续）· resolve_poi 回退 + 2e 实现；SOP 加冲突处理
 
 ### 做了什么
