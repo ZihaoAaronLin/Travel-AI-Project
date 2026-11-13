@@ -1,9 +1,8 @@
 # 来源原文：data/sources/2026-11-13-official-pages.md（艺术史博物馆）
 # CC 2026-11-13 按 Aaron 复制的原文起草，待 Aaron 对照官网核对
-# 待核 1（重要）：原文写「Open daily」，但节假日表里专门列出了 12/21、12/28 两个周一；
-#   Aaron 早先的笔记写「KHM 8 月周一开、9–5 月周一闭」。两者矛盾 → 周一暂不写规则，
-#   引擎对普通周一答 UNKNOWN（没写的星期既不当开、也不当闭）。请 Aaron 对照官网定
-# 待核 2：「Clearing of rooms is 15 minutes before closing」是清场，不是最后入场 → 不填 last_entry
+# Aaron 2026-11-13 定：节假日表里的 12/21、12/28 两个周一是因为圣诞期间整周列出，不代表平时周一闭馆
+#   → 周一按原文「Open daily」写进 r1（Aaron 早先笔记里的「9–5 月周一闭」以现在的官网为准）
+# 待核：「Clearing of rooms is 15 minutes before closing」是清场，不是最后入场 → 不填 last_entry
 id: kunsthistorisches-museum
 city: Vienna
 country: AT
@@ -14,10 +13,10 @@ review: draft
 names: {local: Kunsthistorisches Museum Wien, en: Kunsthistorisches Museum Vienna, zh: 艺术史博物馆}
 aliases: [维也纳艺术史博物馆, KHM]
 rules:
-  # 原文：Open daily, 10 a.m. - 6 p.m.（周一见待核 1）
+  # 原文：Open daily, 10 a.m. - 6 p.m.
   - id: r1
     valid: [2026-11-13, 2027-02-11]
-    days: [TUE, WED, FRI, SAT, SUN]
+    days: [MON, TUE, WED, FRI, SAT, SUN]
     open: "10:00"
     close: "18:00"
   # 原文：Thu until 9 pm

@@ -1,7 +1,6 @@
 # 来源原文：data/sources/2026-11-13-official-pages.md（卢浮宫）
 # CC 2026-11-13 按 Aaron 复制的原文起草，待 Aaron 对照官网核对
-# 待核（重要）：摘录里没有节假日闭馆。卢浮宫通常 1/1、5/1、12/25 闭馆，但这不在摘录里，CC 不能凭印象加。
-#   不补的话，引擎会说 12 月 25 日（周五）9:00–21:00 开放。请 Aaron 在官网找节假日安排
+# 节假日：Aaron 2026-11-13 补充复制的原文（见 data/sources/2026-11-13-official-pages.md 末尾）
 # 待核：原文没写最后入场 → 不填 last_entry
 id: louvre-museum
 city: Paris
@@ -30,6 +29,10 @@ rules:
     valid: [2026-11-13, 2027-02-11]
     days: [TUE]
     closed: true
-exceptions: []
+exceptions:
+  # 原文：the Louvre is closed on 1 January, 1 May and 25 December. It remains open on all other public
+  #       holidays unless they fall on a Tuesday（5/1 在有效期外；其他节假日按每周规则，不另写）
+  - {id: e1, date: 2026-12-25, closed: true, reason: 12 月 25 日闭馆}
+  - {id: e2, date: 2027-01-01, closed: true, reason: 1 月 1 日闭馆}
 source_url: https://www.louvre.fr/en/visit/hours-admission?tab=musee-du-louvre#when-to-visit
 verified_at: 2026-11-13

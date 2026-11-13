@@ -5,6 +5,8 @@
 - 2026-11-13：Aaron 在本机浏览器从官网复制，整理成 Word 文档上传；CC 用 pandoc 转成文本，下面原样保留（只去掉了 Word 的排版标记）
 - 复制日期按上传当天记；奥塞、橘园两条写着「Open today」，和 2026-11-13（周五）对得上
 - 已知的复制损失：美泉宫的表格结构丢了（两行时间对应哪段不确定）；奥塞只复制到「今天」一天
+- 奥塞：Aaron 2026-11-13 决定不收录（草稿已删，下面的原文保留作记录）
+- 卢浮宫、德拉克洛瓦的节假日：Aaron 2026-11-13 补充复制，见文末
 
 ---
 
@@ -304,3 +306,15 @@ Saturday and Sunday
 
 <https://www.louvre.fr/en/visit/hours-admission?tab=musee-national-eugene-delacroix#when-to-visit>
 ```
+
+## 2026-11-13 · Aaron 补充复制
+
+```text
+卢浮宫：
+Public holidays: the Louvre is closed on 1 January, 1 May and 25 December. It remains open on all other public holidays unless they fall on a Tuesday, the museum's day of closure.
+
+德拉克洛瓦美术馆：
+Public holidays: the Musée national Eugène-Delacroix is closed on 1 January, 1 May and 25 December. It remains open on all other public holidays unless they fall on a Tuesday, the museum's day of closure.
+```
+
+Aaron 对艺术史博物馆的判断：节假日表里专门列出两个周一，是因为圣诞期间整周列出，不代表平时周一闭馆。

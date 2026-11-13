@@ -1,7 +1,6 @@
 # 来源原文：data/sources/2026-11-13-official-pages.md（德拉克洛瓦美术馆）
 # CC 2026-11-13 按 Aaron 复制的原文起草，待 Aaron 对照官网核对
-# 待核：原文只列了周一、周三到周日，没写周二。周二不写规则 → 引擎答 UNKNOWN，不当成闭馆。
-#   请 Aaron 在官网确认周二是不是闭馆
+# 周二：开放时间表里没列，Aaron 2026-11-13 补充的节假日原文写明「Tuesday, the museum's day of closure」→ r3
 id: musee-delacroix
 city: Paris
 country: FR
@@ -24,6 +23,15 @@ rules:
     days: [SAT, SUN]
     open: "10:00"
     close: "17:30"
-exceptions: []
+  # 原文（节假日说明）：unless they fall on a Tuesday, the museum's day of closure
+  - id: r3
+    valid: [2026-11-13, 2027-02-11]
+    days: [TUE]
+    closed: true
+exceptions:
+  # 原文：the Musée national Eugène-Delacroix is closed on 1 January, 1 May and 25 December.
+  #       It remains open on all other public holidays unless they fall on a Tuesday（5/1 在有效期外）
+  - {id: e1, date: 2026-12-25, closed: true, reason: 12 月 25 日闭馆}
+  - {id: e2, date: 2027-01-01, closed: true, reason: 1 月 1 日闭馆}
 source_url: https://www.louvre.fr/en/visit/hours-admission?tab=musee-national-eugene-delacroix#when-to-visit
 verified_at: 2026-11-13

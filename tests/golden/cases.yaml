@@ -172,7 +172,7 @@
   type: weekly_closed
   question: 2026-11-16（周一）去艺术史博物馆，开门吗？
   call: {tool: is_open, args: {poi_id: kunsthistorisches-museum, date: 2026-11-16}}
-  check: 同上——草稿里周一没写规则（原文「Open daily」和节假日表矛盾），先看官网到底周一开不开
+  check: 同上——Aaron 2026-11-13 定周一按「Open daily」；核对时再确认一次官网的普通周一
   expect: null
   note: null
   source_url: null
