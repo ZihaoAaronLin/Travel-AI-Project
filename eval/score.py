@@ -12,6 +12,7 @@ import sys
 from collections.abc import Sequence
 from pathlib import Path
 
+from travelkb.evalkit.analysis import ALPHA, HYPOTHESES, PILOT_TUNED, confirm
 from travelkb.evalkit.scoring import mcnemar_exact, paired_discordant, summarize
 
 EVAL_DIR = Path(__file__).resolve().parent
@@ -40,11 +41,56 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 def render(run_id: str, results: dict[str, list[dict]], errors: dict[str, list[dict]]) -> str:
     lines = [f"# 评测结果 · {run_id}", ""]
+    lines += _confirmatory(results)
     lines += _overall(results, errors)
     lines += _by_type(results)
     lines += _pairs(results)
     lines += _cost(results)
     return "\n".join(lines) + "\n"
+
+
+_METRIC_LABEL = {"wrong": "答错", "noncompliant": "工具不合规"}
+
+
+def _confirmatory(results) -> list[str]:
+    """PREREG 第 3、4 节：只有这一节是结论，后面的都是描述性数字。"""
+    full = confirm(results)
+    held_out = confirm(results, exclude=PILOT_TUNED)
+    lines = [
+        "## 验证性检验（结论只看这一节）",
+        "",
+        f"按题汇总：一题两遍里错一遍就算错。三条假设一起做 Holm 校正，α = {ALPHA}。",
+        f"另做一次去掉 {'、'.join(PILOT_TUNED)} 的分析（这几题试跑时用来改过 SOP），"
+        "两次结论不一致时以去掉后的为准。",
+        "",
+    ]
+    lines += _hypothesis_table("全部题", full)
+    lines += _hypothesis_table(f"去掉 {'、'.join(PILOT_TUNED)}", held_out)
+    lines += ["**结论：**", ""]
+    for h, a, b in zip(HYPOTHESES, full, held_out, strict=True):
+        if b.n == 0:
+            verdict = "没有数据（对应的组没跑，或没有这类题）"
+        else:
+            verdict = "支持" if b.supported else "不支持（这批题上没看出差别，或方向相反）"
+        note = "" if a.supported == b.supported else "（两次分析不一致，按去掉后的算）"
+        lines.append(f"- {h.name}：{verdict}{note}")
+    return lines + [""]
+
+
+def _hypothesis_table(title: str, outcomes) -> list[str]:
+    lines = [
+        f"**{title}**",
+        "",
+        "| 假设 | 比较的事 | 题数 | 只有较差组出事 | 只有较好组出事 | p | Holm 后拒绝 | 支持 |",
+        "|---|---|---|---|---|---|---|---|",
+    ]
+    for h, r in zip(HYPOTHESES, outcomes, strict=True):
+        event = f"{_METRIC_LABEL[h.metric]}：{h.worse} 应多于 {h.better}"
+        lines.append(
+            f"| {h.name} | {event} | {r.n} | {r.only_worse} | {r.only_better} | {r.p:.3g} "
+            f"| {'是' if r.holm_reject else '否'} | {'是' if r.supported else '否'} |"
+        )
+    return lines + [""]
 
 
 def _overall(results, errors) -> list[str]:
@@ -99,7 +145,7 @@ def _by_type(results) -> list[str]:
 
 def _pairs(results) -> list[str]:
     lines = [
-        "## 配对比较（McNemar 精确检验，双侧）",
+        "## 配对比较（描述性：按「题 × 遍」配对，不作结论）",
         "",
         "按 (题, rep) 配对，只看「一组错、另一组没错」的对。只有 PREREG 里写的比较算检验，"
         "其余是描述。同一题的几个 rep 不独立，p 值偏乐观。",

@@ -1,5 +1,30 @@
 # HANDOFF
 
+## 2026-11-13（续四）· 验证性分析实现；基线还不能跑
+
+### 做了什么
+- Aaron 放行 test_analysis.py → 实现 src/travelkb/evalkit/analysis.py，tests/ 未改动，全部 386 条通过
+- eval/score.py：summary.md 开头新增「验证性检验」一节（全部题、去掉 q01–q04 各一张表，再给每条假设的最终结论）；原来按「题 × 遍」的配对表改名为「描述性」
+- 某组没跑时结论写「没有数据」，不写「没看出差别」
+- 用 pilot2 的数据渲染过一遍，格式正常（pilot2 只有 A3 / A4，三条假设都显示没有数据或无差别，符合预期）
+
+### 基线为什么还不能跑
+PREREG 的方法部分定了，但冻结条件没满足：
+- 题库只有 q01–q10，PREREG 写的是 30 题
+- 冻结后 data/ 不能再改，2c 的新景点要么在冻结前进来，要么留到下一轮
+- 两条路（Aaron 选）：
+  A. 等 2c 做完再填 q11–q30、冻结、跑（每月循环等题型才有真实景点）
+  B. 只用现有 12 个景点填 q11–q30（monthly_rule 两题并入例外日），先冻结跑出第一个数字；2c 的景点和题进第二轮
+
+### 冻结前 CC 会做、不会做的
+- 会：检查题库格式、题型配比、today 和核验日期的先后、expected_tools
+- 不会：拿引擎的答案去对 gold。对了就改数据等于照着考题调系统；数据错了就让它在评测里暴露（数据错也算系统答错）
+
+### 下一步
+1. Aaron：选 A 或 B
+2. Aaron：填 q11–q30 → CC 检查格式 → Aaron 填 PREREG 预测表、状态改「已冻结」、commit
+3. Aaron：本机跑 `uv run python eval/run.py --model claude-opus-5-5 --run-id baseline-1`（四组、每题 2 遍，约 2 小时，中断了用同一条命令续跑）→ `uv run python eval/score.py --run-id baseline-1` → 提交 eval/runs/baseline-1
+
 ## 2026-11-13（续三）· PREREG 方法定稿 + 验证性分析的红测试
 
 ### 做了什么
