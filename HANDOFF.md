@@ -1,5 +1,47 @@
 # HANDOFF
 
+## 2026-11-13 · Desktop 第 2 阶段验收通过；2e 红测试
+
+### Desktop 第 2 阶段：通过（Aaron 截图）
+- 闭环跑出来了：check_day_plan → find_open_pois 找替代 → is_open → check_day_plan 再验，和 ROADMAP 的验收描述一致
+- 截图里还有一步「Found 3 places」和「Weighing whether to flag conflicting opening-hours data」：模型调了 Desktop 里别的地点搜索工具，拿到的营业时间和 travel-kb 不一致，在权衡要不要提示
+- SOP 没写这种情况。建议（未改，等 Aaron 定）在第 4 条加一句：「其他工具（地图、网页）给的营业时间和 travel-kb 不一致时，以 travel-kb 为准，并告诉用户有出入、请以官网为准」
+
+### Aaron 定：q03 补城市暂缓，先按 ROADMAP 往下推
+- 第 2 阶段剩下的：2c 数据和 15 条金标准（Aaron）、30 题基线（Aaron 填题 + 跑）、2e（CC）
+- resolve_poi 回退的 29 条红测试仍在等审，没有实现
+
+### 2e：build_db + query_kb 的红测试（等 Aaron 审）
+共 54 条（展开后），三个文件：
+- tests/unit/test_sql_build.py（9）：build_database 把景点写成 6 张表，表结构钉死在文件开头
+  - 日期 YYYY-MM-DD、时刻 HH:MM 一律存文本，字符串比较就是先后
+  - exception_days 把三种例外写法都展开成具体日期，和引擎共用 DayException.days()：模型写 SQL 不用自己展开 RRULE
+  - 90 天信任窗口不单独建列：校验已保证规则的 valid 落在窗口内
+- tests/unit/test_sql_readonly.py（31）：只读执行层 ReadOnlyKB
+  - ROADMAP 的 7 层防护，每种攻击一条：DROP / DELETE / UPDATE / INSERT、藏在 CTE 后的 DELETE、建表 / 临时表 / 索引、ATTACH、改 PRAGMA、读 PRAGMA、VACUUM、VACUUM INTO 写文件、ANALYZE、REINDEX、多条语句、load_extension、撑爆内存、无限递归（0.5 秒中断）
+  - 所有攻击跑完，库文件一字节不变、目录里没多出 -journal 之类的文件
+  - **新加的第 7 层**：不返回结果列的语句一律拒绝。CC 实测空串、纯注释都能「成功」执行、返回零行，不拦的话模型会以为「查了，没有」
+  - 允许有上限的递归 CTE：模型逐日枚举日期最自然的写法
+  - 这些行为 CC 都先在 SQLite 3.45 上逐条实测过，测试是能做到的
+- tests/unit/test_tools_sql.py（14）：两个工具 query_kb、describe_schema
+  - 默认不注册；TRAVELKB_ENABLE_SQL=1 才注册，值写错启动失败；开了但库文件不存在也启动失败，提示先跑 build_db.py
+  - 被拒的 SQL 作为工具错误返回，消息告诉模型只能写 SELECT
+
+请 Aaron 重点看：
+1. 表结构（test_sql_build.py 开头）：这就是 A2 组模型能看到的全部数据形状。太难写 SQL 会冤枉 A2，太好写又测不出 H2
+2. exception_days 预先展开：CC 倾向展开（H2 要测的是「模型能不能用日期 SQL 判断开放」，不是「模型会不会解析 RRULE」）；不展开的话 A2 遇到每月循环题几乎必错
+3. 没写测试的部分：scripts/build_db.py 是薄命令行（先跑 validate，有 error 就拒绝生成）；模块级 server 读环境变量的那一行用 Inspector 手动验
+
+### 查看测试
+现在有四个文件会在收集阶段报错（import 了还不存在的东西）。看全部结果用：
+`uv run pytest --continue-on-collection-errors`（当前 288 过、23 红、4 个文件收集失败）
+
+### 下一步
+1. Aaron：审 resolve_poi 回退（29 条）和 2e（54 条）两批红测试
+2. Aaron：SOP 要不要加「和别的工具冲突以 travel-kb 为准」
+3. CC：放行后实现；2e 做完后 A2 组要加进 evalkit（会改到已审的 test_command 里的组清单，到时先问）
+4. Aaron：2c 数据、q11–q30、PREREG（q03 补城市暂缓）
+
 ## 2026-11-12（续四）· pilot2 + Desktop 第 2 阶段 + resolve_poi 回退的红测试
 
 ### pilot2（A3 / A4，q01–q04，SOP 修正后）

@@ -240,7 +240,7 @@ CLAUDE.md 模板（第 0 阶段原样交给 CC）：
 
 **验收**
 - 25 条金标准全过；validate_data 零报错；安全测试全过
-- Claude Desktop：让它排某个周一的一日游 → check_day_plan 报出闭馆 → 模型用 find_open_pois 换掉 → 再验通过
+- Claude Desktop：让它排某个周一的一日游 → check_day_plan 报出闭馆 → 模型用 find_open_pois 换掉 → 再验通过（Aaron 2026-11-13 验收通过；模型还调了 Desktop 里别的地点搜索，营业时间有出入，SOP 待补冲突处理）
 - 题库 30 题，跑 A0（裸模型）和 A6（模型 + 联网搜索）；Notion 版还在就再跑 A1。拿到第一个基线数字
 
 **学会检查点**
